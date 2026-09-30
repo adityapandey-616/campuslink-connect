@@ -34,7 +34,7 @@ function Applications() {
       <div className="space-y-3">
         {list.map((a) => {
           const idx = steps.indexOf(a.status);
-          const offer = a.offers?.[0] ?? (Array.isArray(a.offers) ? undefined : (a.offers as unknown as { id: string; ctc_lpa: number; joining_date: string | null; status: string } | null));
+          const offer = (Array.isArray(a.offers) ? a.offers[0] : a.offers) as { id: string; ctc_lpa: number; joining_date: string | null; status: string } | null | undefined;
           return (
             <div key={a.id} className="rounded-lg border bg-card p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
