@@ -2,9 +2,7 @@ import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { computeMatch, computeReadiness } from "./campus";
 
-export const meQuery = queryOptions({
-  queryKey: ["me-student"],
-  queryFn: async () => {
+async function fetchMe() {
     const { data: u } = await supabase.auth.getUser();
     const { data: student, error } = await supabase.from("students").select("*").eq("user_id", u.user!.id).single();
     if (error) throw error;
@@ -24,23 +22,21 @@ export const meQuery = queryOptions({
       verifiedDocs: (docs.data ?? []).filter((d) => d.status === "verified").length,
     });
     return { student, skills: skillList, projects: projects.data ?? [], certs: certs.data ?? [], docs: docs.data ?? [], readiness };
-  },
-});
+}
+export const meQuery = queryOptions({ queryKey: ["me-student"], queryFn: fetchMe });
 
-export const jobsQuery = queryOptions({
-  queryKey: ["jobs"],
-  queryFn: async () => {
+async function fetchJobs() {
     const { data, error } = await supabase
       .from("jobs")
       .select("*, company:companies(id,name,industry,location), job_skills(skill:skills(id,name))")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map((j) => ({ ...j, skills: j.job_skills.map((s) => s.skill!).filter(Boolean) }));
-  },
-});
+    return (data ?? []).map((j) => ({ ...j, skills: j.job_skills.map((s: { skill: { id: string; name: string } | null }) => s.skill!).filter(Boolean) }));
+}
+export const jobsQuery = queryOptions({ queryKey: ["jobs"], queryFn: fetchJobs });
 
-export type Me = Awaited<ReturnType<typeof meQuery.queryFn>>;
-export type Job = Awaited<ReturnType<typeof jobsQuery.queryFn>>[number];
+export type Me = Awaited<ReturnType<typeof fetchMe>>;
+export type Job = Awaited<ReturnType<typeof fetchJobs>>[number];
 
 export function matchFor(me: Me, job: Job) {
   return computeMatch(

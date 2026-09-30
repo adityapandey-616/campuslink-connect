@@ -26,12 +26,12 @@ function ResetPassword() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const pw = String(f.get("password"));
-    if (pw.length < 8) return toast.error("Password must be at least 8 characters.");
-    if (pw !== f.get("confirm")) return toast.error("Passwords do not match.");
+    if (pw.length < 8) { toast.error("Password must be at least 8 characters."); return; }
+    if (pw !== f.get("confirm")) { toast.error("Passwords do not match."); return; }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password: pw });
     setBusy(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Password updated");
     navigate({ to: "/dashboard" });
   }
