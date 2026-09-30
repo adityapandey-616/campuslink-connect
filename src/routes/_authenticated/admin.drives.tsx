@@ -18,7 +18,7 @@ function Drives() {
 
   async function create(f: FormData) {
     const { error } = await supabase.from("placement_drives").insert({ company_id: String(f.get("company")), title: String(f.get("title")).slice(0, 120), drive_date: String(f.get("date")), venue: String(f.get("venue")).slice(0, 120) });
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return; }
     toast.success("Drive scheduled");
     qc.invalidateQueries({ queryKey: ["drives"] });
   }

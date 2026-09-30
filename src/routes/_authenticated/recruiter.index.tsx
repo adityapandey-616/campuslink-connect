@@ -37,13 +37,13 @@ function RecruiterHome() {
     if (!action) return;
     if (action.kind === "interview") {
       const when = String(f.get("when"));
-      if (!when) return toast.error("Pick a date and time");
+      if (!when) { toast.error("Pick a date and time"); return; }
       const { error } = await supabase.from("interviews").insert({ application_id: action.appId, round: String(f.get("round") || "Technical Round 1"), scheduled_at: new Date(when).toISOString(), mode: String(f.get("mode")), location: String(f.get("location") ?? "") });
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       await setStatus.mutateAsync({ id: action.appId, status: "interview" });
     } else {
       const { error } = await supabase.from("offers").insert({ application_id: action.appId, ctc_lpa: Number(f.get("ctc")), joining_date: String(f.get("joining")) || null });
-      if (error) return toast.error(error.message);
+      if (error) { toast.error(error.message); return; }
       await setStatus.mutateAsync({ id: action.appId, status: "offered" });
     }
     setAction(null);

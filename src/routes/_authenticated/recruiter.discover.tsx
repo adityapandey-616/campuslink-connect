@@ -22,8 +22,8 @@ function Discover() {
   if (company.isLoading || jobs.isLoading || students.isLoading) return <Loading />;
   const list = jobs.data ?? [];
   if (!list.length) return <Empty>Create a job first to discover matching candidates.</Empty>;
-  const job = list.find((j) => j.id === jobId) ?? list[0];
-  const jobLike = { ...job, skills: job.job_skills.map((s) => s.skill!).filter(Boolean) };
+  const job = (list.find((j) => j.id === jobId) ?? list[0])!;
+  const jobLike = { ...(job as unknown as { min_cgpa: number; max_backlogs: number; eligible_branches: string[] }), skills: (job.job_skills ?? []).map((s) => s.skill!).filter(Boolean) };
   const ranked = (students.data ?? [])
     .map((s) => ({ s, r: computeMatch({ studentSkillIds: new Set(s.student_skills.map((x) => x.skill_id)), cgpa: Number(s.cgpa), backlogs: s.backlogs, branch: s.branch }, jobLike) }))
     .filter((x) => x.r.eligible)

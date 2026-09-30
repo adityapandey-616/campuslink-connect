@@ -25,7 +25,7 @@ function Profile() {
 
   const save = useMutation({
     mutationFn: async (v: Record<string, unknown>) => {
-      const { error } = await supabase.from("students").update(v).eq("id", me.data!.student.id);
+      const { error } = await supabase.from("students").update(v as never).eq("id", me.data!.student.id);
       if (error) throw error;
     },
     onSuccess: () => { toast.success("Profile saved"); refresh(); },
@@ -41,7 +41,7 @@ function Profile() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const cgpa = Number(f.get("cgpa"));
-    if (isNaN(cgpa) || cgpa < 0 || cgpa > 10) return toast.error("CGPA must be between 0 and 10");
+    if (isNaN(cgpa) || cgpa < 0 || cgpa > 10) { toast.error("CGPA must be between 0 and 10"); return; }
     save.mutate({
       full_name: String(f.get("full_name")).slice(0, 100),
       roll_no: String(f.get("roll_no")).slice(0, 30),
@@ -154,7 +154,7 @@ function ListCard({ title, items, fields, onAdd, onDelete }: {
         e.preventDefault();
         const f = new FormData(e.currentTarget);
         const v = Object.fromEntries(fields.map(([k]) => [k, String(f.get(k) ?? "").slice(0, 200)]));
-        if (!v[fields[0][0]]) return;
+        if (!v[fields[0]![0]]) return;
         onAdd(v); e.currentTarget.reset();
       }}>
         {fields.map(([k, p]) => <Input key={k} name={k} placeholder={p} />)}

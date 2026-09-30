@@ -30,7 +30,7 @@ function NewJob() {
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    if (!branches.length) return toast.error("Select at least one branch");
+    if (!branches.length) { toast.error("Select at least one branch"); return; }
     setBusy(true);
     const { data: u } = await supabase.auth.getUser();
     const { data: job, error } = await supabase.from("jobs").insert({
@@ -44,9 +44,9 @@ function NewJob() {
       max_backlogs: Number(f.get("max_backlogs")),
       eligible_branches: branches,
       deadline: String(f.get("deadline")) || null,
-      created_by: u.user?.id,
+      created_by: u.user?.id ?? null,
     }).select("id").single();
-    if (error) { setBusy(false); return toast.error(error.message); }
+    if (error) { setBusy(false); { toast.error(error.message); return; } }
     if (picked.length) await supabase.from("job_skills").insert(picked.map((skill_id) => ({ job_id: job.id, skill_id })));
     setBusy(false);
     toast.success("Job published");
