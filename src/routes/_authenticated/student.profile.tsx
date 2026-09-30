@@ -101,14 +101,14 @@ function Profile() {
           title="Projects"
           items={projects.map((p) => ({ id: p.id, main: p.title, sub: p.tech }))}
           fields={[["title", "Project title"], ["tech", "Tech used"]]}
-          onAdd={(v) => run(supabase.from("projects").insert({ student_id: sid, title: v.title, tech: v.tech }))}
+          onAdd={(v) => run(supabase.from("projects").insert({ student_id: sid, title: v["title"] ?? "", tech: v["tech"] ?? "" }))}
           onDelete={(id) => run(supabase.from("projects").delete().eq("id", id))}
         />
         <ListCard
           title="Certifications"
           items={certs.map((c) => ({ id: c.id, main: c.name, sub: c.issuer }))}
           fields={[["name", "Certification"], ["issuer", "Issuer"]]}
-          onAdd={(v) => run(supabase.from("certifications").insert({ student_id: sid, name: v.name, issuer: v.issuer }))}
+          onAdd={(v) => run(supabase.from("certifications").insert({ student_id: sid, name: v["name"] ?? "", issuer: v["issuer"] ?? "" }))}
           onDelete={(id) => run(supabase.from("certifications").delete().eq("id", id))}
         />
         <section className="rounded-lg border bg-card p-5">
