@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Empty, Loading, PageHeader } from "@/components/AppShell";
+import { Button } from "@/components/ui/button";
 import { computeReadiness } from "@/lib/campus";
 import { MOCK_ALL_STUDENTS } from "@/lib/mock-data";
 
@@ -36,7 +37,19 @@ function Attention() {
 
   return (
     <>
-      <PageHeader title="Students requiring attention" subtitle="Unplaced students with risk factors, lowest readiness first." />
+      <PageHeader
+        title="Students requiring attention"
+        subtitle="Unplaced students with risk factors, lowest readiness first."
+        action={
+          <div className="flex gap-2">
+            <Link to="/admin/students">
+              <Button size="sm" variant="outline">
+                All Students Directory
+              </Button>
+            </Link>
+          </div>
+        }
+      />
       {rows.length === 0 ? <Empty>No students need attention right now.</Empty> : (
         <div className="overflow-hidden rounded-lg border bg-card">
           <table className="w-full text-sm">

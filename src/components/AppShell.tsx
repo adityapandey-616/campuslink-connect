@@ -43,7 +43,7 @@ export function AppShell({ nav, roleLabel, children }: { nav: NavItem[]; roleLab
           </div>
         </div>
 
-        <nav className="flex-1 space-y-0.5 px-3 py-3">
+        <nav className="flex-1 space-y-0.5 px-3 py-3 overflow-y-auto">
           {nav.map((n) => (
             <Link
               key={n.to}
@@ -52,8 +52,8 @@ export function AppShell({ nav, roleLabel, children }: { nav: NavItem[]; roleLab
               className="flex items-center gap-3 rounded-md px-3 py-2 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
               activeProps={{ className: "bg-sidebar-accent text-sidebar-accent-foreground font-medium" }}
             >
-              <n.icon className="h-4 w-4" />
-              {n.label}
+              <n.icon className="h-4 w-4 shrink-0" />
+              <span className="truncate">{n.label}</span>
             </Link>
           ))}
         </nav>

@@ -18,9 +18,17 @@ import { Route as AuthenticatedDashboardRouteImport } from './routes/_authentica
 import { Route as AuthenticatedRecruiterRouteImport } from './routes/_authenticated/recruiter'
 import { Route as AuthenticatedStudentRouteImport } from './routes/_authenticated/student'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin.index'
+import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
+import { Route as AuthenticatedAdminApplicationsRouteImport } from './routes/_authenticated/admin.applications'
 import { Route as AuthenticatedAdminAttentionRouteImport } from './routes/_authenticated/admin.attention'
+import { Route as AuthenticatedAdminCompaniesRouteImport } from './routes/_authenticated/admin.companies'
 import { Route as AuthenticatedAdminDocumentsRouteImport } from './routes/_authenticated/admin.documents'
 import { Route as AuthenticatedAdminDrivesRouteImport } from './routes/_authenticated/admin.drives'
+import { Route as AuthenticatedAdminEligibilityRouteImport } from './routes/_authenticated/admin.eligibility'
+import { Route as AuthenticatedAdminInterviewsRouteImport } from './routes/_authenticated/admin.interviews'
+import { Route as AuthenticatedAdminNotificationsRouteImport } from './routes/_authenticated/admin.notifications'
+import { Route as AuthenticatedAdminSettingsRouteImport } from './routes/_authenticated/admin.settings'
+import { Route as AuthenticatedAdminStudentsRouteImport } from './routes/_authenticated/admin.students'
 import { Route as AuthenticatedRecruiterIndexRouteImport } from './routes/_authenticated/recruiter.index'
 import { Route as AuthenticatedRecruiterApplicationsRouteImport } from './routes/_authenticated/recruiter.applications'
 import { Route as AuthenticatedRecruiterCompanyRouteImport } from './routes/_authenticated/recruiter.company'
@@ -82,10 +90,28 @@ const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAdminRoute,
 } as any)
+const AuthenticatedAdminAnalyticsRoute =
+  AuthenticatedAdminAnalyticsRouteImport.update({
+    id: '/analytics',
+    path: '/analytics',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminApplicationsRoute =
+  AuthenticatedAdminApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
 const AuthenticatedAdminAttentionRoute =
   AuthenticatedAdminAttentionRouteImport.update({
     id: '/attention',
     path: '/attention',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminCompaniesRoute =
+  AuthenticatedAdminCompaniesRouteImport.update({
+    id: '/companies',
+    path: '/companies',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedAdminDocumentsRoute =
@@ -98,6 +124,36 @@ const AuthenticatedAdminDrivesRoute =
   AuthenticatedAdminDrivesRouteImport.update({
     id: '/drives',
     path: '/drives',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminEligibilityRoute =
+  AuthenticatedAdminEligibilityRouteImport.update({
+    id: '/eligibility',
+    path: '/eligibility',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminInterviewsRoute =
+  AuthenticatedAdminInterviewsRouteImport.update({
+    id: '/interviews',
+    path: '/interviews',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminNotificationsRoute =
+  AuthenticatedAdminNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminSettingsRoute =
+  AuthenticatedAdminSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedAdminRoute,
+  } as any)
+const AuthenticatedAdminStudentsRoute =
+  AuthenticatedAdminStudentsRouteImport.update({
+    id: '/students',
+    path: '/students',
     getParentRoute: () => AuthenticatedAdminRoute,
   } as any)
 const AuthenticatedRecruiterIndexRoute =
@@ -205,9 +261,17 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/recruiter': typeof AuthenticatedRecruiterRouteWithChildren
   '/student': typeof AuthenticatedStudentRouteWithChildren
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/applications': typeof AuthenticatedAdminApplicationsRoute
   '/admin/attention': typeof AuthenticatedAdminAttentionRoute
+  '/admin/companies': typeof AuthenticatedAdminCompaniesRoute
   '/admin/documents': typeof AuthenticatedAdminDocumentsRoute
   '/admin/drives': typeof AuthenticatedAdminDrivesRoute
+  '/admin/eligibility': typeof AuthenticatedAdminEligibilityRoute
+  '/admin/interviews': typeof AuthenticatedAdminInterviewsRoute
+  '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/students': typeof AuthenticatedAdminStudentsRoute
   '/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRoute
   '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
@@ -231,9 +295,17 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/reset-password': typeof ResetPasswordRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/admin/applications': typeof AuthenticatedAdminApplicationsRoute
   '/admin/attention': typeof AuthenticatedAdminAttentionRoute
+  '/admin/companies': typeof AuthenticatedAdminCompaniesRoute
   '/admin/documents': typeof AuthenticatedAdminDocumentsRoute
   '/admin/drives': typeof AuthenticatedAdminDrivesRoute
+  '/admin/eligibility': typeof AuthenticatedAdminEligibilityRoute
+  '/admin/interviews': typeof AuthenticatedAdminInterviewsRoute
+  '/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
+  '/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/admin/students': typeof AuthenticatedAdminStudentsRoute
   '/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRoute
   '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
@@ -262,9 +334,17 @@ export interface FileRoutesById {
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
   '/_authenticated/recruiter': typeof AuthenticatedRecruiterRouteWithChildren
   '/_authenticated/student': typeof AuthenticatedStudentRouteWithChildren
+  '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
+  '/_authenticated/admin/applications': typeof AuthenticatedAdminApplicationsRoute
   '/_authenticated/admin/attention': typeof AuthenticatedAdminAttentionRoute
+  '/_authenticated/admin/companies': typeof AuthenticatedAdminCompaniesRoute
   '/_authenticated/admin/documents': typeof AuthenticatedAdminDocumentsRoute
   '/_authenticated/admin/drives': typeof AuthenticatedAdminDrivesRoute
+  '/_authenticated/admin/eligibility': typeof AuthenticatedAdminEligibilityRoute
+  '/_authenticated/admin/interviews': typeof AuthenticatedAdminInterviewsRoute
+  '/_authenticated/admin/notifications': typeof AuthenticatedAdminNotificationsRoute
+  '/_authenticated/admin/settings': typeof AuthenticatedAdminSettingsRoute
+  '/_authenticated/admin/students': typeof AuthenticatedAdminStudentsRoute
   '/_authenticated/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRoute
   '/_authenticated/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
   '/_authenticated/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
@@ -293,9 +373,17 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/recruiter'
     | '/student'
+    | '/admin/analytics'
+    | '/admin/applications'
     | '/admin/attention'
+    | '/admin/companies'
     | '/admin/documents'
     | '/admin/drives'
+    | '/admin/eligibility'
+    | '/admin/interviews'
+    | '/admin/notifications'
+    | '/admin/settings'
+    | '/admin/students'
     | '/recruiter/applications'
     | '/recruiter/company'
     | '/recruiter/dashboard'
@@ -319,9 +407,17 @@ export interface FileRouteTypes {
     | '/auth'
     | '/reset-password'
     | '/dashboard'
+    | '/admin/analytics'
+    | '/admin/applications'
     | '/admin/attention'
+    | '/admin/companies'
     | '/admin/documents'
     | '/admin/drives'
+    | '/admin/eligibility'
+    | '/admin/interviews'
+    | '/admin/notifications'
+    | '/admin/settings'
+    | '/admin/students'
     | '/recruiter/applications'
     | '/recruiter/company'
     | '/recruiter/dashboard'
@@ -349,9 +445,17 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard'
     | '/_authenticated/recruiter'
     | '/_authenticated/student'
+    | '/_authenticated/admin/analytics'
+    | '/_authenticated/admin/applications'
     | '/_authenticated/admin/attention'
+    | '/_authenticated/admin/companies'
     | '/_authenticated/admin/documents'
     | '/_authenticated/admin/drives'
+    | '/_authenticated/admin/eligibility'
+    | '/_authenticated/admin/interviews'
+    | '/_authenticated/admin/notifications'
+    | '/_authenticated/admin/settings'
+    | '/_authenticated/admin/students'
     | '/_authenticated/recruiter/applications'
     | '/_authenticated/recruiter/company'
     | '/_authenticated/recruiter/dashboard'
@@ -443,11 +547,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
+    '/_authenticated/admin/analytics': {
+      id: '/_authenticated/admin/analytics'
+      path: '/analytics'
+      fullPath: '/admin/analytics'
+      preLoaderRoute: typeof AuthenticatedAdminAnalyticsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/applications': {
+      id: '/_authenticated/admin/applications'
+      path: '/applications'
+      fullPath: '/admin/applications'
+      preLoaderRoute: typeof AuthenticatedAdminApplicationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
     '/_authenticated/admin/attention': {
       id: '/_authenticated/admin/attention'
       path: '/attention'
       fullPath: '/admin/attention'
       preLoaderRoute: typeof AuthenticatedAdminAttentionRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/companies': {
+      id: '/_authenticated/admin/companies'
+      path: '/companies'
+      fullPath: '/admin/companies'
+      preLoaderRoute: typeof AuthenticatedAdminCompaniesRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/admin/documents': {
@@ -462,6 +587,41 @@ declare module '@tanstack/react-router' {
       path: '/drives'
       fullPath: '/admin/drives'
       preLoaderRoute: typeof AuthenticatedAdminDrivesRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/eligibility': {
+      id: '/_authenticated/admin/eligibility'
+      path: '/eligibility'
+      fullPath: '/admin/eligibility'
+      preLoaderRoute: typeof AuthenticatedAdminEligibilityRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/interviews': {
+      id: '/_authenticated/admin/interviews'
+      path: '/interviews'
+      fullPath: '/admin/interviews'
+      preLoaderRoute: typeof AuthenticatedAdminInterviewsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/notifications': {
+      id: '/_authenticated/admin/notifications'
+      path: '/notifications'
+      fullPath: '/admin/notifications'
+      preLoaderRoute: typeof AuthenticatedAdminNotificationsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/settings': {
+      id: '/_authenticated/admin/settings'
+      path: '/settings'
+      fullPath: '/admin/settings'
+      preLoaderRoute: typeof AuthenticatedAdminSettingsRouteImport
+      parentRoute: typeof AuthenticatedAdminRoute
+    }
+    '/_authenticated/admin/students': {
+      id: '/_authenticated/admin/students'
+      path: '/students'
+      fullPath: '/admin/students'
+      preLoaderRoute: typeof AuthenticatedAdminStudentsRouteImport
       parentRoute: typeof AuthenticatedAdminRoute
     }
     '/_authenticated/recruiter/': {
@@ -580,16 +740,32 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAdminRouteChildren {
+  AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
+  AuthenticatedAdminApplicationsRoute: typeof AuthenticatedAdminApplicationsRoute
   AuthenticatedAdminAttentionRoute: typeof AuthenticatedAdminAttentionRoute
+  AuthenticatedAdminCompaniesRoute: typeof AuthenticatedAdminCompaniesRoute
   AuthenticatedAdminDocumentsRoute: typeof AuthenticatedAdminDocumentsRoute
   AuthenticatedAdminDrivesRoute: typeof AuthenticatedAdminDrivesRoute
+  AuthenticatedAdminEligibilityRoute: typeof AuthenticatedAdminEligibilityRoute
+  AuthenticatedAdminInterviewsRoute: typeof AuthenticatedAdminInterviewsRoute
+  AuthenticatedAdminNotificationsRoute: typeof AuthenticatedAdminNotificationsRoute
+  AuthenticatedAdminSettingsRoute: typeof AuthenticatedAdminSettingsRoute
+  AuthenticatedAdminStudentsRoute: typeof AuthenticatedAdminStudentsRoute
   AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
 }
 
 const AuthenticatedAdminRouteChildren: AuthenticatedAdminRouteChildren = {
+  AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
+  AuthenticatedAdminApplicationsRoute: AuthenticatedAdminApplicationsRoute,
   AuthenticatedAdminAttentionRoute: AuthenticatedAdminAttentionRoute,
+  AuthenticatedAdminCompaniesRoute: AuthenticatedAdminCompaniesRoute,
   AuthenticatedAdminDocumentsRoute: AuthenticatedAdminDocumentsRoute,
   AuthenticatedAdminDrivesRoute: AuthenticatedAdminDrivesRoute,
+  AuthenticatedAdminEligibilityRoute: AuthenticatedAdminEligibilityRoute,
+  AuthenticatedAdminInterviewsRoute: AuthenticatedAdminInterviewsRoute,
+  AuthenticatedAdminNotificationsRoute: AuthenticatedAdminNotificationsRoute,
+  AuthenticatedAdminSettingsRoute: AuthenticatedAdminSettingsRoute,
+  AuthenticatedAdminStudentsRoute: AuthenticatedAdminStudentsRoute,
   AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
 }
 
