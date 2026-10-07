@@ -28,6 +28,7 @@ export interface RecruiterApplicant {
     scheduled_at: string;
     mode: string;
     location: string;
+    status?: string;
   }>;
   offers: Array<{
     id: string;

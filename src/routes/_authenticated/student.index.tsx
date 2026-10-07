@@ -130,11 +130,11 @@ function StudentDashboard() {
           hint={readiness >= 80 ? "Placement ready ✓" : readiness >= 60 ? "Good progress" : "Room to improve"}
         />
         <Stat label="Applications" value={apps.data?.length ?? 0} hint="View all →" />
-        <Stat label="Upcoming interviews" value={upcoming.length} hint={upcoming.length === 0 ? "None scheduled" : undefined} />
+        <Stat label="Upcoming interviews" value={upcoming.length} hint={upcoming.length === 0 ? "None scheduled" : "Interview scheduled"} />
         <Stat
           label="Placement status"
           value={<span className="capitalize">{m.student.placement_status}</span>}
-          hint={m.student.placement_status === "placed" ? "Congratulations! 🎉" : undefined}
+          hint={m.student.placement_status === "placed" ? "Congratulations! 🎉" : "In progress"}
         />
       </div>
 

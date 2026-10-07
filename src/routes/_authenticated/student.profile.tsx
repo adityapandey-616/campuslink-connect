@@ -42,10 +42,10 @@ const CAREER_INTEREST_OPTIONS = [
 
 function computeProfileCompletion(student: Record<string, unknown>, skills: unknown[], projects: unknown[], certs: unknown[], docs: { status: string }[]) {
   const checks = [
-    { label: "Full name", done: Boolean(student.full_name) },
-    { label: "Roll number", done: Boolean(student.roll_no) },
-    { label: "Phone number", done: Boolean(student.phone) },
-    { label: "Bio / About", done: Boolean(student.bio) },
+    { label: "Full name", done: Boolean(student["full_name"]) },
+    { label: "Roll number", done: Boolean(student["roll_no"]) },
+    { label: "Phone number", done: Boolean(student["phone"]) },
+    { label: "Bio / About", done: Boolean(student["bio"]) },
     { label: "At least 3 skills", done: skills.length >= 3 },
     { label: "At least 1 project", done: projects.length >= 1 },
     { label: "At least 1 certification", done: certs.length >= 1 },

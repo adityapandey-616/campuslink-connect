@@ -68,6 +68,14 @@ export interface MockApplication {
   status: string;
   match_score: number;
   created_at: string;
+  student?: {
+    id: string;
+    full_name: string;
+    branch: string;
+    cgpa: number;
+    backlogs: number;
+    email: string;
+  };
   job?: MockJob;
   interviews: MockInterview[];
   offers: MockOffer[];
@@ -88,8 +96,8 @@ export interface MockJob {
   status: string;
   company: MockCompany;
   skills: { id: string; name: string }[];
-  job_skills?: { skill: { id: string; name: string } }[];
-  applications?: any[];
+  job_skills: { skill: { id: string; name: string } | null }[] | undefined;
+  applications: any[] | undefined;
 }
 
 export interface MockDrive {
@@ -187,6 +195,8 @@ export const SEED_JOBS: MockJob[] = [
     status: "open",
     company: getCompanyById("c4"),
     skills: getSkillsByIds(["sk6", "sk7", "sk12", "sk8"]),
+    job_skills: getSkillsByIds(["sk6", "sk7", "sk12", "sk8"]).map((skill) => ({ skill })),
+    applications: [],
   },
   {
     id: "j2",
@@ -203,6 +213,8 @@ export const SEED_JOBS: MockJob[] = [
     status: "open",
     company: getCompanyById("c1"),
     skills: getSkillsByIds(["sk2", "sk5", "sk8", "sk7"]),
+    job_skills: getSkillsByIds(["sk2", "sk5", "sk8", "sk7"]).map((skill) => ({ skill })),
+    applications: [],
   },
   {
     id: "j3",
@@ -219,6 +231,8 @@ export const SEED_JOBS: MockJob[] = [
     status: "open",
     company: getCompanyById("c4"),
     skills: getSkillsByIds(["sk4", "sk5", "sk13"]),
+    job_skills: getSkillsByIds(["sk4", "sk5", "sk13"]).map((skill) => ({ skill })),
+    applications: [],
   },
   {
     id: "j4",
@@ -235,6 +249,8 @@ export const SEED_JOBS: MockJob[] = [
     status: "open",
     company: getCompanyById("c2"),
     skills: getSkillsByIds(["sk7", "sk1", "sk15", "sk13"]),
+    job_skills: getSkillsByIds(["sk7", "sk1", "sk15", "sk13"]).map((skill) => ({ skill })),
+    applications: [],
   },
   {
     id: "j5",
@@ -251,6 +267,8 @@ export const SEED_JOBS: MockJob[] = [
     status: "open",
     company: getCompanyById("c5"),
     skills: getSkillsByIds(["sk16", "sk11", "sk1"]),
+    job_skills: getSkillsByIds(["sk16", "sk11", "sk1"]).map((skill) => ({ skill })),
+    applications: [],
   },
   {
     id: "j6",
@@ -267,6 +285,8 @@ export const SEED_JOBS: MockJob[] = [
     status: "open",
     company: getCompanyById("c6"),
     skills: getSkillsByIds(["sk5", "sk6", "sk7"]),
+    job_skills: getSkillsByIds(["sk5", "sk6", "sk7"]).map((skill) => ({ skill })),
+    applications: [],
   },
   {
     id: "j7",
@@ -283,6 +303,8 @@ export const SEED_JOBS: MockJob[] = [
     status: "open",
     company: getCompanyById("c3"),
     skills: getSkillsByIds(["sk14", "sk3", "sk9"]),
+    job_skills: getSkillsByIds(["sk14", "sk3", "sk9"]).map((skill) => ({ skill })),
+    applications: [],
   },
   {
     id: "j8",
@@ -299,6 +321,8 @@ export const SEED_JOBS: MockJob[] = [
     status: "open",
     company: getCompanyById("c2"),
     skills: getSkillsByIds(["sk1", "sk10", "sk8"]),
+    job_skills: getSkillsByIds(["sk1", "sk10", "sk8"]).map((skill) => ({ skill })),
+    applications: [],
   },
 ];
 
@@ -325,6 +349,8 @@ export const getJobById = (id: string): MockJob =>
     status: "open",
     company: getCompanyById("c1"),
     skills: [],
+    job_skills: [],
+    applications: [],
   };
 
 export const SEED_STUDENT = {
@@ -476,8 +502,29 @@ export const SEED_APPLICATIONS: MockApplication[] = [
 
 export const MOCK_APPLICATIONS = SEED_APPLICATIONS;
 
-export const MOCK_ALL_STUDENTS = [
-  { id: "s1", full_name: "Aarav Mehta", email: "aarav.m@demo.campus", roll_no: "21CS001", branch: "CSE", batch_year: 2025, cgpa: 8.7, backlogs: 0, placement_status: "shortlisted", student_skills: [{ skill_id: "sk5" }, { skill_id: "sk6" }, { skill_id: "sk7" }, { skill_id: "sk8" }, { skill_id: "sk11" }], projects: [{ id: "p1" }, { id: "p2" }], certifications: [{ id: "c1" }], documents: [{ status: "verified" }, { status: "verified" }], applications: [{ id: "app1" }, { id: "app2" }] },
+export interface MockCandidate {
+  id: string;
+  full_name: string;
+  email: string;
+  roll_no: string;
+  branch: string;
+  batch_year: number;
+  cgpa: number;
+  backlogs: number;
+  placement_status: string;
+  student_skills: { skill_id: string }[];
+  projects: Array<{ id: string; title?: string; description?: string; tech?: string }>;
+  certifications: Array<{ id: string; name?: string; issuer?: string }>;
+  documents: Array<{ status: string }>;
+  applications: Array<{ id: string }>;
+  phone?: string;
+  bio?: string;
+  tenth_pct?: number;
+  twelfth_pct?: number;
+}
+
+export const MOCK_ALL_STUDENTS: MockCandidate[] = [
+  { id: "s1", full_name: "Aarav Mehta", email: "aarav.m@demo.campus", roll_no: "21CS001", branch: "CSE", batch_year: 2025, cgpa: 8.7, backlogs: 0, placement_status: "shortlisted", student_skills: [{ skill_id: "sk5" }, { skill_id: "sk6" }, { skill_id: "sk7" }, { skill_id: "sk8" }, { skill_id: "sk11" }], projects: [{ id: "p1", title: "Distributed Rate Limiter", description: "High-performance sliding-window rate limiter built with Node.js and Redis.", tech: "Node.js, Redis, Docker, TypeScript" }, { id: "p2", title: "Campus Placement Portal", description: "End-to-end recruitment tracker with AI candidate matching.", tech: "React, Tailwind, PostgreSQL, TanStack Router" }], certifications: [{ id: "c1", name: "AWS Certified Cloud Practitioner", issuer: "Amazon Web Services" }], documents: [{ status: "verified" }, { status: "verified" }], applications: [{ id: "app1" }, { id: "app2" }], phone: "+91 98765 43210", bio: "Backend-focused computer science undergrad, passionate about distributed systems and cloud microservices.", tenth_pct: 92, twelfth_pct: 90 },
   { id: "s2", full_name: "Diya Sharma", email: "diya.s@demo.campus", roll_no: "21CS002", branch: "CSE", batch_year: 2025, cgpa: 9.1, backlogs: 0, placement_status: "placed", student_skills: [{ skill_id: "sk1" }, { skill_id: "sk10" }, { skill_id: "sk7" }, { skill_id: "sk8" }, { skill_id: "sk9" }], projects: [{ id: "p3" }], certifications: [{ id: "c2" }], documents: [{ status: "verified" }], applications: [{ id: "app4" }] },
   { id: "s3", full_name: "Kabir Nair", email: "kabir.n@demo.campus", roll_no: "21IT003", branch: "IT", batch_year: 2025, cgpa: 7.4, backlogs: 0, placement_status: "unplaced", student_skills: [{ skill_id: "sk4" }, { skill_id: "sk5" }, { skill_id: "sk13" }], projects: [{ id: "p4" }], certifications: [], documents: [{ status: "pending" }], applications: [{ id: "app5" }] },
   { id: "s4", full_name: "Ishita Rao", email: "ishita.r@demo.campus", roll_no: "21EC004", branch: "ECE", batch_year: 2025, cgpa: 8.2, backlogs: 0, placement_status: "placed", student_skills: [{ skill_id: "sk14" }, { skill_id: "sk3" }, { skill_id: "sk9" }], projects: [{ id: "p5" }], certifications: [{ id: "c3" }], documents: [{ status: "verified" }], applications: [{ id: "app6" }] },
@@ -690,9 +737,11 @@ export function addMockJob(data: {
   eligible_branches: string[];
   deadline?: string | null;
   skill_ids?: string[];
+  status?: string;
 }): MockJob {
   const current = getMockJobs();
   const compId = data.company_id ?? "c1";
+  const skills = getSkillsByIds(data.skill_ids ?? []);
   const newJob: MockJob = {
     id: `job-${Date.now()}`,
     company_id: compId,
@@ -705,22 +754,62 @@ export function addMockJob(data: {
     max_backlogs: data.max_backlogs,
     eligible_branches: data.eligible_branches,
     deadline: data.deadline ?? "2026-11-30",
-    status: "open",
+    status: data.status ?? "open",
     company: getCompanyById(compId),
-    skills: getSkillsByIds(data.skill_ids ?? []),
+    skills,
+    job_skills: skills.map((skill) => ({ skill })),
     applications: [],
   };
   writeLocal("jobs", [newJob, ...current]);
   return newJob;
 }
 
+export function updateMockJob(jobId: string, updates: Partial<MockJob> & { skill_ids?: string[] }): MockJob | null {
+  const current = getMockJobs();
+  const index = current.findIndex((job) => job.id === jobId);
+  if (index < 0) return null;
+  const currentJob = current[index];
+  if (!currentJob) return null;
+
+  const nextJob: MockJob = {
+    ...currentJob,
+    id: updates.id ?? currentJob.id,
+    company_id: updates.company_id ?? currentJob.company_id,
+    title: updates.title ?? currentJob.title,
+    job_type: updates.job_type ?? currentJob.job_type,
+    location: updates.location ?? currentJob.location,
+    ctc_lpa: updates.ctc_lpa ?? currentJob.ctc_lpa,
+    description: updates.description ?? currentJob.description,
+    min_cgpa: updates.min_cgpa ?? currentJob.min_cgpa,
+    max_backlogs: updates.max_backlogs ?? currentJob.max_backlogs,
+    eligible_branches: updates.eligible_branches ?? currentJob.eligible_branches,
+    deadline: updates.deadline ?? currentJob.deadline,
+    status: updates.status ?? currentJob.status,
+    company: updates.company ?? currentJob.company,
+    skills: updates.skill_ids ? getSkillsByIds(updates.skill_ids) : currentJob.skills,
+    job_skills: updates.job_skills ?? currentJob.job_skills,
+    applications: updates.applications ?? currentJob.applications,
+  };
+  current[index] = nextJob;
+  writeLocal("jobs", current);
+  return nextJob;
+}
+
 // Applications Store
 export function getMockApplications(): MockApplication[] {
   const apps = readLocal("applications", SEED_APPLICATIONS);
   const jobs = getMockJobs();
-  return apps.map((a) => ({
-    ...a,
-    job: a.job ?? jobs.find((j) => j.id === a.job_id) ?? getJobById(a.job_id),
+  return apps.map((application) => ({
+    ...application,
+    student: application.student ?? MOCK_ALL_STUDENTS.find((student) => student.id === application.student_id) ?? {
+      id: application.student_id,
+      full_name: "Student",
+      branch: "CSE",
+      cgpa: 0,
+      backlogs: 0,
+      email: "student@demo.campus",
+    },
+    job: application.job ?? jobs.find((job) => job.id === application.job_id) ?? getJobById(application.job_id),
   }));
 }
 

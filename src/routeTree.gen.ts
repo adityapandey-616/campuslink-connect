@@ -22,14 +22,21 @@ import { Route as AuthenticatedAdminAttentionRouteImport } from './routes/_authe
 import { Route as AuthenticatedAdminDocumentsRouteImport } from './routes/_authenticated/admin.documents'
 import { Route as AuthenticatedAdminDrivesRouteImport } from './routes/_authenticated/admin.drives'
 import { Route as AuthenticatedRecruiterIndexRouteImport } from './routes/_authenticated/recruiter.index'
+import { Route as AuthenticatedRecruiterApplicationsRouteImport } from './routes/_authenticated/recruiter.applications'
+import { Route as AuthenticatedRecruiterCompanyRouteImport } from './routes/_authenticated/recruiter.company'
+import { Route as AuthenticatedRecruiterDashboardRouteImport } from './routes/_authenticated/recruiter.dashboard'
 import { Route as AuthenticatedRecruiterDiscoverRouteImport } from './routes/_authenticated/recruiter.discover'
+import { Route as AuthenticatedRecruiterInterviewsRouteImport } from './routes/_authenticated/recruiter.interviews'
+import { Route as AuthenticatedRecruiterJobsRouteImport } from './routes/_authenticated/recruiter.jobs'
 import { Route as AuthenticatedRecruiterNewJobRouteImport } from './routes/_authenticated/recruiter.new-job'
+import { Route as AuthenticatedRecruiterOffersRouteImport } from './routes/_authenticated/recruiter.offers'
 import { Route as AuthenticatedStudentIndexRouteImport } from './routes/_authenticated/student.index'
 import { Route as AuthenticatedStudentApplicationsRouteImport } from './routes/_authenticated/student.applications'
 import { Route as AuthenticatedStudentDrivesRouteImport } from './routes/_authenticated/student.drives'
 import { Route as AuthenticatedStudentInsightsRouteImport } from './routes/_authenticated/student.insights'
 import { Route as AuthenticatedStudentOpportunitiesRouteImport } from './routes/_authenticated/student.opportunities'
 import { Route as AuthenticatedStudentProfileRouteImport } from './routes/_authenticated/student.profile'
+import { Route as AuthenticatedRecruiterCandidateCandidateIdRouteImport } from './routes/_authenticated/recruiter.candidate.$candidateId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -99,16 +106,52 @@ const AuthenticatedRecruiterIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedRecruiterRoute,
   } as any)
+const AuthenticatedRecruiterApplicationsRoute =
+  AuthenticatedRecruiterApplicationsRouteImport.update({
+    id: '/applications',
+    path: '/applications',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterCompanyRoute =
+  AuthenticatedRecruiterCompanyRouteImport.update({
+    id: '/company',
+    path: '/company',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterDashboardRoute =
+  AuthenticatedRecruiterDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
 const AuthenticatedRecruiterDiscoverRoute =
   AuthenticatedRecruiterDiscoverRouteImport.update({
     id: '/discover',
     path: '/discover',
     getParentRoute: () => AuthenticatedRecruiterRoute,
   } as any)
+const AuthenticatedRecruiterInterviewsRoute =
+  AuthenticatedRecruiterInterviewsRouteImport.update({
+    id: '/interviews',
+    path: '/interviews',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterJobsRoute =
+  AuthenticatedRecruiterJobsRouteImport.update({
+    id: '/jobs',
+    path: '/jobs',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
 const AuthenticatedRecruiterNewJobRoute =
   AuthenticatedRecruiterNewJobRouteImport.update({
     id: '/new-job',
     path: '/new-job',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
+const AuthenticatedRecruiterOffersRoute =
+  AuthenticatedRecruiterOffersRouteImport.update({
+    id: '/offers',
+    path: '/offers',
     getParentRoute: () => AuthenticatedRecruiterRoute,
   } as any)
 const AuthenticatedStudentIndexRoute =
@@ -147,6 +190,12 @@ const AuthenticatedStudentProfileRoute =
     path: '/profile',
     getParentRoute: () => AuthenticatedStudentRoute,
   } as any)
+const AuthenticatedRecruiterCandidateCandidateIdRoute =
+  AuthenticatedRecruiterCandidateCandidateIdRouteImport.update({
+    id: '/candidate/$candidateId',
+    path: '/candidate/$candidateId',
+    getParentRoute: () => AuthenticatedRecruiterRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -159,8 +208,14 @@ export interface FileRoutesByFullPath {
   '/admin/attention': typeof AuthenticatedAdminAttentionRoute
   '/admin/documents': typeof AuthenticatedAdminDocumentsRoute
   '/admin/drives': typeof AuthenticatedAdminDrivesRoute
+  '/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRoute
+  '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
+  '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
   '/recruiter/discover': typeof AuthenticatedRecruiterDiscoverRoute
+  '/recruiter/interviews': typeof AuthenticatedRecruiterInterviewsRoute
+  '/recruiter/jobs': typeof AuthenticatedRecruiterJobsRoute
   '/recruiter/new-job': typeof AuthenticatedRecruiterNewJobRoute
+  '/recruiter/offers': typeof AuthenticatedRecruiterOffersRoute
   '/student/applications': typeof AuthenticatedStudentApplicationsRoute
   '/student/drives': typeof AuthenticatedStudentDrivesRoute
   '/student/insights': typeof AuthenticatedStudentInsightsRoute
@@ -169,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/admin/': typeof AuthenticatedAdminIndexRoute
   '/recruiter/': typeof AuthenticatedRecruiterIndexRoute
   '/student/': typeof AuthenticatedStudentIndexRoute
+  '/recruiter/candidate/$candidateId': typeof AuthenticatedRecruiterCandidateCandidateIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -178,8 +234,14 @@ export interface FileRoutesByTo {
   '/admin/attention': typeof AuthenticatedAdminAttentionRoute
   '/admin/documents': typeof AuthenticatedAdminDocumentsRoute
   '/admin/drives': typeof AuthenticatedAdminDrivesRoute
+  '/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRoute
+  '/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
+  '/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
   '/recruiter/discover': typeof AuthenticatedRecruiterDiscoverRoute
+  '/recruiter/interviews': typeof AuthenticatedRecruiterInterviewsRoute
+  '/recruiter/jobs': typeof AuthenticatedRecruiterJobsRoute
   '/recruiter/new-job': typeof AuthenticatedRecruiterNewJobRoute
+  '/recruiter/offers': typeof AuthenticatedRecruiterOffersRoute
   '/student/applications': typeof AuthenticatedStudentApplicationsRoute
   '/student/drives': typeof AuthenticatedStudentDrivesRoute
   '/student/insights': typeof AuthenticatedStudentInsightsRoute
@@ -188,6 +250,7 @@ export interface FileRoutesByTo {
   '/admin': typeof AuthenticatedAdminIndexRoute
   '/recruiter': typeof AuthenticatedRecruiterIndexRoute
   '/student': typeof AuthenticatedStudentIndexRoute
+  '/recruiter/candidate/$candidateId': typeof AuthenticatedRecruiterCandidateCandidateIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -202,8 +265,14 @@ export interface FileRoutesById {
   '/_authenticated/admin/attention': typeof AuthenticatedAdminAttentionRoute
   '/_authenticated/admin/documents': typeof AuthenticatedAdminDocumentsRoute
   '/_authenticated/admin/drives': typeof AuthenticatedAdminDrivesRoute
+  '/_authenticated/recruiter/applications': typeof AuthenticatedRecruiterApplicationsRoute
+  '/_authenticated/recruiter/company': typeof AuthenticatedRecruiterCompanyRoute
+  '/_authenticated/recruiter/dashboard': typeof AuthenticatedRecruiterDashboardRoute
   '/_authenticated/recruiter/discover': typeof AuthenticatedRecruiterDiscoverRoute
+  '/_authenticated/recruiter/interviews': typeof AuthenticatedRecruiterInterviewsRoute
+  '/_authenticated/recruiter/jobs': typeof AuthenticatedRecruiterJobsRoute
   '/_authenticated/recruiter/new-job': typeof AuthenticatedRecruiterNewJobRoute
+  '/_authenticated/recruiter/offers': typeof AuthenticatedRecruiterOffersRoute
   '/_authenticated/student/applications': typeof AuthenticatedStudentApplicationsRoute
   '/_authenticated/student/drives': typeof AuthenticatedStudentDrivesRoute
   '/_authenticated/student/insights': typeof AuthenticatedStudentInsightsRoute
@@ -212,6 +281,7 @@ export interface FileRoutesById {
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/recruiter/': typeof AuthenticatedRecruiterIndexRoute
   '/_authenticated/student/': typeof AuthenticatedStudentIndexRoute
+  '/_authenticated/recruiter/candidate/$candidateId': typeof AuthenticatedRecruiterCandidateCandidateIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -226,8 +296,14 @@ export interface FileRouteTypes {
     | '/admin/attention'
     | '/admin/documents'
     | '/admin/drives'
+    | '/recruiter/applications'
+    | '/recruiter/company'
+    | '/recruiter/dashboard'
     | '/recruiter/discover'
+    | '/recruiter/interviews'
+    | '/recruiter/jobs'
     | '/recruiter/new-job'
+    | '/recruiter/offers'
     | '/student/applications'
     | '/student/drives'
     | '/student/insights'
@@ -236,6 +312,7 @@ export interface FileRouteTypes {
     | '/admin/'
     | '/recruiter/'
     | '/student/'
+    | '/recruiter/candidate/$candidateId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -245,8 +322,14 @@ export interface FileRouteTypes {
     | '/admin/attention'
     | '/admin/documents'
     | '/admin/drives'
+    | '/recruiter/applications'
+    | '/recruiter/company'
+    | '/recruiter/dashboard'
     | '/recruiter/discover'
+    | '/recruiter/interviews'
+    | '/recruiter/jobs'
     | '/recruiter/new-job'
+    | '/recruiter/offers'
     | '/student/applications'
     | '/student/drives'
     | '/student/insights'
@@ -255,6 +338,7 @@ export interface FileRouteTypes {
     | '/admin'
     | '/recruiter'
     | '/student'
+    | '/recruiter/candidate/$candidateId'
   id:
     | '__root__'
     | '/'
@@ -268,8 +352,14 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/attention'
     | '/_authenticated/admin/documents'
     | '/_authenticated/admin/drives'
+    | '/_authenticated/recruiter/applications'
+    | '/_authenticated/recruiter/company'
+    | '/_authenticated/recruiter/dashboard'
     | '/_authenticated/recruiter/discover'
+    | '/_authenticated/recruiter/interviews'
+    | '/_authenticated/recruiter/jobs'
     | '/_authenticated/recruiter/new-job'
+    | '/_authenticated/recruiter/offers'
     | '/_authenticated/student/applications'
     | '/_authenticated/student/drives'
     | '/_authenticated/student/insights'
@@ -278,6 +368,7 @@ export interface FileRouteTypes {
     | '/_authenticated/admin/'
     | '/_authenticated/recruiter/'
     | '/_authenticated/student/'
+    | '/_authenticated/recruiter/candidate/$candidateId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -380,6 +471,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecruiterIndexRouteImport
       parentRoute: typeof AuthenticatedRecruiterRoute
     }
+    '/_authenticated/recruiter/applications': {
+      id: '/_authenticated/recruiter/applications'
+      path: '/applications'
+      fullPath: '/recruiter/applications'
+      preLoaderRoute: typeof AuthenticatedRecruiterApplicationsRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/company': {
+      id: '/_authenticated/recruiter/company'
+      path: '/company'
+      fullPath: '/recruiter/company'
+      preLoaderRoute: typeof AuthenticatedRecruiterCompanyRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/dashboard': {
+      id: '/_authenticated/recruiter/dashboard'
+      path: '/dashboard'
+      fullPath: '/recruiter/dashboard'
+      preLoaderRoute: typeof AuthenticatedRecruiterDashboardRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
     '/_authenticated/recruiter/discover': {
       id: '/_authenticated/recruiter/discover'
       path: '/discover'
@@ -387,11 +499,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRecruiterDiscoverRouteImport
       parentRoute: typeof AuthenticatedRecruiterRoute
     }
+    '/_authenticated/recruiter/interviews': {
+      id: '/_authenticated/recruiter/interviews'
+      path: '/interviews'
+      fullPath: '/recruiter/interviews'
+      preLoaderRoute: typeof AuthenticatedRecruiterInterviewsRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/jobs': {
+      id: '/_authenticated/recruiter/jobs'
+      path: '/jobs'
+      fullPath: '/recruiter/jobs'
+      preLoaderRoute: typeof AuthenticatedRecruiterJobsRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
     '/_authenticated/recruiter/new-job': {
       id: '/_authenticated/recruiter/new-job'
       path: '/new-job'
       fullPath: '/recruiter/new-job'
       preLoaderRoute: typeof AuthenticatedRecruiterNewJobRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
+    '/_authenticated/recruiter/offers': {
+      id: '/_authenticated/recruiter/offers'
+      path: '/offers'
+      fullPath: '/recruiter/offers'
+      preLoaderRoute: typeof AuthenticatedRecruiterOffersRouteImport
       parentRoute: typeof AuthenticatedRecruiterRoute
     }
     '/_authenticated/student/': {
@@ -436,6 +569,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudentProfileRouteImport
       parentRoute: typeof AuthenticatedStudentRoute
     }
+    '/_authenticated/recruiter/candidate/$candidateId': {
+      id: '/_authenticated/recruiter/candidate/$candidateId'
+      path: '/candidate/$candidateId'
+      fullPath: '/recruiter/candidate/$candidateId'
+      preLoaderRoute: typeof AuthenticatedRecruiterCandidateCandidateIdRouteImport
+      parentRoute: typeof AuthenticatedRecruiterRoute
+    }
   }
 }
 
@@ -457,16 +597,33 @@ const AuthenticatedAdminRouteWithChildren =
   AuthenticatedAdminRoute._addFileChildren(AuthenticatedAdminRouteChildren)
 
 interface AuthenticatedRecruiterRouteChildren {
+  AuthenticatedRecruiterApplicationsRoute: typeof AuthenticatedRecruiterApplicationsRoute
+  AuthenticatedRecruiterCompanyRoute: typeof AuthenticatedRecruiterCompanyRoute
+  AuthenticatedRecruiterDashboardRoute: typeof AuthenticatedRecruiterDashboardRoute
   AuthenticatedRecruiterDiscoverRoute: typeof AuthenticatedRecruiterDiscoverRoute
+  AuthenticatedRecruiterInterviewsRoute: typeof AuthenticatedRecruiterInterviewsRoute
+  AuthenticatedRecruiterJobsRoute: typeof AuthenticatedRecruiterJobsRoute
   AuthenticatedRecruiterNewJobRoute: typeof AuthenticatedRecruiterNewJobRoute
+  AuthenticatedRecruiterOffersRoute: typeof AuthenticatedRecruiterOffersRoute
   AuthenticatedRecruiterIndexRoute: typeof AuthenticatedRecruiterIndexRoute
+  AuthenticatedRecruiterCandidateCandidateIdRoute: typeof AuthenticatedRecruiterCandidateCandidateIdRoute
 }
 
 const AuthenticatedRecruiterRouteChildren: AuthenticatedRecruiterRouteChildren =
   {
+    AuthenticatedRecruiterApplicationsRoute:
+      AuthenticatedRecruiterApplicationsRoute,
+    AuthenticatedRecruiterCompanyRoute: AuthenticatedRecruiterCompanyRoute,
+    AuthenticatedRecruiterDashboardRoute: AuthenticatedRecruiterDashboardRoute,
     AuthenticatedRecruiterDiscoverRoute: AuthenticatedRecruiterDiscoverRoute,
+    AuthenticatedRecruiterInterviewsRoute:
+      AuthenticatedRecruiterInterviewsRoute,
+    AuthenticatedRecruiterJobsRoute: AuthenticatedRecruiterJobsRoute,
     AuthenticatedRecruiterNewJobRoute: AuthenticatedRecruiterNewJobRoute,
+    AuthenticatedRecruiterOffersRoute: AuthenticatedRecruiterOffersRoute,
     AuthenticatedRecruiterIndexRoute: AuthenticatedRecruiterIndexRoute,
+    AuthenticatedRecruiterCandidateCandidateIdRoute:
+      AuthenticatedRecruiterCandidateCandidateIdRoute,
   }
 
 const AuthenticatedRecruiterRouteWithChildren =
