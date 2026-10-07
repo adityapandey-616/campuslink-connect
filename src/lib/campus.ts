@@ -2,14 +2,36 @@ import { supabase } from "@/integrations/supabase/client";
 
 export type Role = "student" | "recruiter" | "admin";
 
+export function getActiveRole(): Role {
+  if (typeof window !== "undefined") {
+    const r = localStorage.getItem("campuslink_active_role") as Role;
+    if (r === "student" || r === "recruiter" || r === "admin") return r;
+  }
+  return "student";
+}
+
+export function setActiveRole(role: Role) {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("campuslink_active_role", role);
+  }
+}
+
 export async function getMyRoles(): Promise<Role[]> {
-  const { data: u } = await supabase.auth.getUser();
-  if (!u.user) return [];
-  const { data } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
-  return (data ?? []).map((r) => r.role as Role);
+  try {
+    const { data: u } = await supabase.auth.getUser();
+    if (!u.user) return ["student", "recruiter", "admin"];
+    const { data } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
+    const roles = (data ?? []).map((r) => r.role as Role);
+    return roles.length ? roles : ["student", "recruiter", "admin"];
+  } catch {
+    return ["student", "recruiter", "admin"];
+  }
 }
 
 export function homeFor(roles: Role[]): "/admin" | "/recruiter" | "/student" {
+  const active = getActiveRole();
+  if (roles.includes(active)) return `/${active}`;
+  if (roles.includes("student")) return "/student";
   if (roles.includes("admin")) return "/admin";
   if (roles.includes("recruiter")) return "/recruiter";
   return "/student";

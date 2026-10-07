@@ -32,25 +32,26 @@ function Landing() {
       <header className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Logo />
         <div className="flex items-center gap-2">
-          <Button asChild variant="ghost"><Link to="/auth">Sign in</Link></Button>
-          <Button asChild><Link to="/auth" search={{ mode: "signup" }}>Get started</Link></Button>
+          <Button asChild variant="outline"><Link to="/admin">Admin View</Link></Button>
+          <Button asChild><Link to="/student">Open Dashboard</Link></Button>
         </div>
       </header>
 
       <section className="mx-auto grid max-w-6xl gap-12 px-6 pb-20 pt-12 lg:grid-cols-[1.1fr_1fr] lg:pt-20">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Placement season, organised
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Direct Access Mode · No Login Required
           </div>
           <h1 className="mt-5 text-4xl font-bold leading-[1.05] text-foreground md:text-6xl">
             Connecting Campus Talent With Corporate Opportunities.
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-            One platform for students, recruiters and the placement cell — from profile and readiness to offer, joining and analytics.
+            One platform for students, recruiters and the placement cell — explore all three interactive portals directly with demo data.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
-            <Button asChild size="lg"><Link to="/auth" search={{ mode: "signup" }}>Create student account <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
-            <Button asChild size="lg" variant="outline"><Link to="/auth" search={{ mode: "signup", role: "recruiter" }}>I'm a recruiter</Link></Button>
+            <Button asChild size="lg"><Link to="/student">Student Dashboard <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
+            <Button asChild size="lg" variant="outline"><Link to="/recruiter">Recruiter Portal</Link></Button>
+            <Button asChild size="lg" variant="secondary"><Link to="/admin">Placement Cell Admin</Link></Button>
           </div>
         </div>
 
@@ -110,7 +111,7 @@ function Landing() {
             <h2 className="text-2xl font-semibold">Ready for this placement season?</h2>
             <p className="mt-1 text-primary-foreground/70">Set up your profile in minutes and see where you stand.</p>
           </div>
-          <Button asChild size="lg" variant="secondary"><Link to="/auth" search={{ mode: "signup" }}>Get started</Link></Button>
+          <Button asChild size="lg" variant="secondary"><Link to="/student">Open Student Dashboard</Link></Button>
         </div>
       </section>
       <footer className="border-t py-6 text-center text-xs text-muted-foreground">© 2026 CAMPUSLINK · Campus-to-Corporate Placement Platform</footer>

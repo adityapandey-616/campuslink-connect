@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Bar, BarChart, CartesianGrid, Cell, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { supabase } from "@/integrations/supabase/client";
 import { Loading, PageHeader, Stat } from "@/components/AppShell";
+import { MOCK_ALL_STUDENTS, MOCK_ADMIN_APPS, MOCK_OFFERS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
   component: AdminAnalytics,
@@ -14,12 +15,19 @@ function AdminAnalytics() {
   const q = useQuery({
     queryKey: ["admin-analytics"],
     queryFn: async () => {
-      const [s, a, o] = await Promise.all([
-        supabase.from("students").select("id,branch,placement_status"),
-        supabase.from("applications").select("status, job:jobs(company:companies(name))"),
-        supabase.from("offers").select("ctc_lpa,status"),
-      ]);
-      return { students: s.data ?? [], apps: a.data ?? [], offers: o.data ?? [] };
+      try {
+        const [s, a, o] = await Promise.all([
+          supabase.from("students").select("id,branch,placement_status"),
+          supabase.from("applications").select("status, job:jobs(company:companies(name))"),
+          supabase.from("offers").select("ctc_lpa,status"),
+        ]);
+        const students = (s.data && s.data.length > 0) ? s.data : MOCK_ALL_STUDENTS;
+        const apps = (a.data && a.data.length > 0) ? a.data : MOCK_ADMIN_APPS;
+        const offers = (o.data && o.data.length > 0) ? o.data : MOCK_OFFERS;
+        return { students, apps, offers };
+      } catch {
+        return { students: MOCK_ALL_STUDENTS, apps: MOCK_ADMIN_APPS, offers: MOCK_OFFERS };
+      }
     },
   });
   if (q.isLoading || !q.data) return <Loading />;

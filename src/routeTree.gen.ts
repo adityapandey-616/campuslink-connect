@@ -26,6 +26,8 @@ import { Route as AuthenticatedRecruiterDiscoverRouteImport } from './routes/_au
 import { Route as AuthenticatedRecruiterNewJobRouteImport } from './routes/_authenticated/recruiter.new-job'
 import { Route as AuthenticatedStudentIndexRouteImport } from './routes/_authenticated/student.index'
 import { Route as AuthenticatedStudentApplicationsRouteImport } from './routes/_authenticated/student.applications'
+import { Route as AuthenticatedStudentDrivesRouteImport } from './routes/_authenticated/student.drives'
+import { Route as AuthenticatedStudentInsightsRouteImport } from './routes/_authenticated/student.insights'
 import { Route as AuthenticatedStudentOpportunitiesRouteImport } from './routes/_authenticated/student.opportunities'
 import { Route as AuthenticatedStudentProfileRouteImport } from './routes/_authenticated/student.profile'
 
@@ -121,6 +123,18 @@ const AuthenticatedStudentApplicationsRoute =
     path: '/applications',
     getParentRoute: () => AuthenticatedStudentRoute,
   } as any)
+const AuthenticatedStudentDrivesRoute =
+  AuthenticatedStudentDrivesRouteImport.update({
+    id: '/drives',
+    path: '/drives',
+    getParentRoute: () => AuthenticatedStudentRoute,
+  } as any)
+const AuthenticatedStudentInsightsRoute =
+  AuthenticatedStudentInsightsRouteImport.update({
+    id: '/insights',
+    path: '/insights',
+    getParentRoute: () => AuthenticatedStudentRoute,
+  } as any)
 const AuthenticatedStudentOpportunitiesRoute =
   AuthenticatedStudentOpportunitiesRouteImport.update({
     id: '/opportunities',
@@ -148,6 +162,8 @@ export interface FileRoutesByFullPath {
   '/recruiter/discover': typeof AuthenticatedRecruiterDiscoverRoute
   '/recruiter/new-job': typeof AuthenticatedRecruiterNewJobRoute
   '/student/applications': typeof AuthenticatedStudentApplicationsRoute
+  '/student/drives': typeof AuthenticatedStudentDrivesRoute
+  '/student/insights': typeof AuthenticatedStudentInsightsRoute
   '/student/opportunities': typeof AuthenticatedStudentOpportunitiesRoute
   '/student/profile': typeof AuthenticatedStudentProfileRoute
   '/admin/': typeof AuthenticatedAdminIndexRoute
@@ -165,6 +181,8 @@ export interface FileRoutesByTo {
   '/recruiter/discover': typeof AuthenticatedRecruiterDiscoverRoute
   '/recruiter/new-job': typeof AuthenticatedRecruiterNewJobRoute
   '/student/applications': typeof AuthenticatedStudentApplicationsRoute
+  '/student/drives': typeof AuthenticatedStudentDrivesRoute
+  '/student/insights': typeof AuthenticatedStudentInsightsRoute
   '/student/opportunities': typeof AuthenticatedStudentOpportunitiesRoute
   '/student/profile': typeof AuthenticatedStudentProfileRoute
   '/admin': typeof AuthenticatedAdminIndexRoute
@@ -187,6 +205,8 @@ export interface FileRoutesById {
   '/_authenticated/recruiter/discover': typeof AuthenticatedRecruiterDiscoverRoute
   '/_authenticated/recruiter/new-job': typeof AuthenticatedRecruiterNewJobRoute
   '/_authenticated/student/applications': typeof AuthenticatedStudentApplicationsRoute
+  '/_authenticated/student/drives': typeof AuthenticatedStudentDrivesRoute
+  '/_authenticated/student/insights': typeof AuthenticatedStudentInsightsRoute
   '/_authenticated/student/opportunities': typeof AuthenticatedStudentOpportunitiesRoute
   '/_authenticated/student/profile': typeof AuthenticatedStudentProfileRoute
   '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
@@ -209,6 +229,8 @@ export interface FileRouteTypes {
     | '/recruiter/discover'
     | '/recruiter/new-job'
     | '/student/applications'
+    | '/student/drives'
+    | '/student/insights'
     | '/student/opportunities'
     | '/student/profile'
     | '/admin/'
@@ -226,6 +248,8 @@ export interface FileRouteTypes {
     | '/recruiter/discover'
     | '/recruiter/new-job'
     | '/student/applications'
+    | '/student/drives'
+    | '/student/insights'
     | '/student/opportunities'
     | '/student/profile'
     | '/admin'
@@ -247,6 +271,8 @@ export interface FileRouteTypes {
     | '/_authenticated/recruiter/discover'
     | '/_authenticated/recruiter/new-job'
     | '/_authenticated/student/applications'
+    | '/_authenticated/student/drives'
+    | '/_authenticated/student/insights'
     | '/_authenticated/student/opportunities'
     | '/_authenticated/student/profile'
     | '/_authenticated/admin/'
@@ -382,6 +408,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStudentApplicationsRouteImport
       parentRoute: typeof AuthenticatedStudentRoute
     }
+    '/_authenticated/student/drives': {
+      id: '/_authenticated/student/drives'
+      path: '/drives'
+      fullPath: '/student/drives'
+      preLoaderRoute: typeof AuthenticatedStudentDrivesRouteImport
+      parentRoute: typeof AuthenticatedStudentRoute
+    }
+    '/_authenticated/student/insights': {
+      id: '/_authenticated/student/insights'
+      path: '/insights'
+      fullPath: '/student/insights'
+      preLoaderRoute: typeof AuthenticatedStudentInsightsRouteImport
+      parentRoute: typeof AuthenticatedStudentRoute
+    }
     '/_authenticated/student/opportunities': {
       id: '/_authenticated/student/opportunities'
       path: '/opportunities'
@@ -436,6 +476,8 @@ const AuthenticatedRecruiterRouteWithChildren =
 
 interface AuthenticatedStudentRouteChildren {
   AuthenticatedStudentApplicationsRoute: typeof AuthenticatedStudentApplicationsRoute
+  AuthenticatedStudentDrivesRoute: typeof AuthenticatedStudentDrivesRoute
+  AuthenticatedStudentInsightsRoute: typeof AuthenticatedStudentInsightsRoute
   AuthenticatedStudentOpportunitiesRoute: typeof AuthenticatedStudentOpportunitiesRoute
   AuthenticatedStudentProfileRoute: typeof AuthenticatedStudentProfileRoute
   AuthenticatedStudentIndexRoute: typeof AuthenticatedStudentIndexRoute
@@ -443,6 +485,8 @@ interface AuthenticatedStudentRouteChildren {
 
 const AuthenticatedStudentRouteChildren: AuthenticatedStudentRouteChildren = {
   AuthenticatedStudentApplicationsRoute: AuthenticatedStudentApplicationsRoute,
+  AuthenticatedStudentDrivesRoute: AuthenticatedStudentDrivesRoute,
+  AuthenticatedStudentInsightsRoute: AuthenticatedStudentInsightsRoute,
   AuthenticatedStudentOpportunitiesRoute:
     AuthenticatedStudentOpportunitiesRoute,
   AuthenticatedStudentProfileRoute: AuthenticatedStudentProfileRoute,

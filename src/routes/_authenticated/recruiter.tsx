@@ -4,10 +4,6 @@ import { AppShell } from "@/components/AppShell";
 import { getMyRoles, homeFor } from "@/lib/campus";
 
 export const Route = createFileRoute("/_authenticated/recruiter")({
-  beforeLoad: async () => {
-    const roles = await getMyRoles();
-    if (!roles.includes("recruiter") && !roles.includes("admin")) throw redirect({ to: homeFor(roles) });
-  },
   head: () => ({ meta: [{ title: "Recruiter — CAMPUSLINK" }] }),
   component: () => (
     <AppShell

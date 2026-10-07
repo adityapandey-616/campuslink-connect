@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Empty, Loading, PageHeader } from "@/components/AppShell";
 import { companyJobsQuery, myCompanyQuery } from "@/lib/recruiter-data";
 import { computeMatch } from "@/lib/campus";
+import { MOCK_ALL_STUDENTS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/recruiter/discover")({
   component: Discover,
@@ -15,7 +16,15 @@ function Discover() {
   const jobs = useQuery(companyJobsQuery(company.data?.id));
   const students = useQuery({
     queryKey: ["all-students"],
-    queryFn: async () => (await supabase.from("students").select("id,full_name,branch,cgpa,backlogs,placement_status, student_skills(skill_id)")).data ?? [],
+    queryFn: async () => {
+      try {
+        const res = await supabase.from("students").select("id,full_name,branch,cgpa,backlogs,placement_status, student_skills(skill_id)");
+        if (res.data && res.data.length > 0) return res.data;
+        return MOCK_ALL_STUDENTS;
+      } catch {
+        return MOCK_ALL_STUDENTS;
+      }
+    },
   });
   const [jobId, setJobId] = useState("");
 

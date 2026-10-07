@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Empty, Loading, PageHeader } from "@/components/AppShell";
 import { computeReadiness } from "@/lib/campus";
+import { MOCK_ALL_STUDENTS } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/admin/attention")({
   component: Attention,
@@ -11,8 +12,15 @@ export const Route = createFileRoute("/_authenticated/admin/attention")({
 function Attention() {
   const q = useQuery({
     queryKey: ["attention"],
-    queryFn: async () =>
-      (await supabase.from("students").select("id,full_name,branch,cgpa,backlogs,placement_status, student_skills(skill_id), projects(id), certifications(id), documents(status), applications(id)")).data ?? [],
+    queryFn: async () => {
+      try {
+        const res = await supabase.from("students").select("id,full_name,branch,cgpa,backlogs,placement_status, student_skills(skill_id), projects(id), certifications(id), documents(status), applications(id)");
+        if (res.data && res.data.length > 0) return res.data;
+        return MOCK_ALL_STUDENTS;
+      } catch {
+        return MOCK_ALL_STUDENTS;
+      }
+    },
   });
   if (q.isLoading) return <Loading />;
   const rows = (q.data ?? []).map((s) => {
