@@ -1,9 +1,11 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import type { ReactNode } from "react";
-import { LogOut, type LucideIcon } from "lucide-react";
+import { LogOut, Shield, User, type LucideIcon } from "lucide-react";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Logo } from "./Logo";
+import { getSession, logout } from "@/lib/auth-store";
 
 export interface NavItem {
   to: string;
@@ -14,32 +16,91 @@ export interface NavItem {
 export function AppShell({ nav, roleLabel, children }: { nav: NavItem[]; roleLabel: string; children: ReactNode }) {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const session = getSession();
+
   async function signOut() {
     await qc.cancelQueries();
     qc.clear();
     try {
       await supabase.auth.signOut();
     } catch {}
-    navigate({ to: "/", replace: true });
+    logout();
+    toast.info("Logged out successfully.");
+    navigate({ to: "/auth", replace: true });
   }
+
+  function handleSwitchPortal(targetRole: "student" | "admin" | "recruiter") {
+    if (session?.role !== targetRole) {
+      toast.warning(`Switching to ${targetRole.toUpperCase()} requires ${targetRole} authentication.`);
+      navigate({ to: "/auth", search: { role: targetRole, redirect: `/${targetRole}` } });
+    } else {
+      navigate({ to: `/${targetRole}` as any });
+    }
+  }
+
   return (
     <div className="flex min-h-screen bg-background">
       <aside className="hidden w-64 shrink-0 flex-col bg-sidebar text-sidebar-foreground md:flex">
         <div className="px-5 py-5 border-b border-sidebar-border">
           <Logo inverted />
-          <div className="mt-2 flex items-center justify-between">
-            <span className="text-xs uppercase tracking-wider text-sidebar-foreground/60">{roleLabel}</span>
-            <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-medium text-accent">Direct Access</span>
+          <div className="mt-2.5 flex items-center justify-between">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="h-2 w-2 rounded-full bg-accent shrink-0" />
+              <span className="text-xs uppercase tracking-wider text-sidebar-foreground/80 font-medium truncate">
+                {roleLabel}
+              </span>
+            </div>
+            <span className="rounded-full bg-accent/20 px-2 py-0.5 text-[10px] font-medium text-accent shrink-0">
+              Session Active
+            </span>
           </div>
+          {session?.name && (
+            <div className="mt-2 text-[11px] text-sidebar-foreground/60 flex items-center gap-1.5 truncate">
+              <User className="h-3 w-3 shrink-0" />
+              <span className="truncate">{session.name}</span>
+            </div>
+          )}
         </div>
 
-        {/* Portal Quick Switcher */}
+        {/* Portal Quick Switcher with Role Guard */}
         <div className="p-3 border-b border-sidebar-border">
-          <div className="text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/50 px-2 mb-1.5">Switch Portal</div>
+          <div className="text-[11px] font-medium uppercase tracking-wider text-sidebar-foreground/50 px-2 mb-1.5">
+            Switch Portal
+          </div>
           <div className="grid grid-cols-3 gap-1 rounded-md bg-sidebar-accent/50 p-1 text-xs">
-            <Link to="/student" className="rounded px-1.5 py-1 text-center font-medium hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground" activeProps={{ className: "bg-sidebar-accent text-accent font-semibold shadow-xs" }}>Student</Link>
-            <Link to="/admin" className="rounded px-1.5 py-1 text-center font-medium hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground" activeProps={{ className: "bg-sidebar-accent text-accent font-semibold shadow-xs" }}>Admin</Link>
-            <Link to="/recruiter" className="rounded px-1.5 py-1 text-center font-medium hover:bg-sidebar-accent text-sidebar-foreground/80 hover:text-sidebar-foreground" activeProps={{ className: "bg-sidebar-accent text-accent font-semibold shadow-xs" }}>Recruiter</Link>
+            <button
+              type="button"
+              onClick={() => handleSwitchPortal("student")}
+              className={`rounded px-1.5 py-1 text-center font-medium transition-colors ${
+                session?.role === "student"
+                  ? "bg-sidebar-accent text-accent font-semibold shadow-xs"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`}
+            >
+              Student
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchPortal("admin")}
+              className={`rounded px-1.5 py-1 text-center font-medium transition-colors ${
+                session?.role === "admin"
+                  ? "bg-sidebar-accent text-accent font-semibold shadow-xs"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`}
+            >
+              Admin
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchPortal("recruiter")}
+              className={`rounded px-1.5 py-1 text-center font-medium transition-colors ${
+                session?.role === "recruiter"
+                  ? "bg-sidebar-accent text-accent font-semibold shadow-xs"
+                  : "text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              }`}
+            >
+              Recruiter
+            </button>
           </div>
         </div>
 
