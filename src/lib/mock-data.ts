@@ -40,6 +40,7 @@ export interface MockDoc {
   student_id: string;
   doc_type: string;
   status: string;
+  note: string | null;
   created_at: string;
 }
 
@@ -61,13 +62,16 @@ export interface MockOffer {
   status: string;
 }
 
+export type MockApplicationStatus = "applied" | "shortlisted" | "interview" | "offered" | "rejected" | "joined";
+
 export interface MockApplication {
   id: string;
   student_id: string;
   job_id: string;
-  status: string;
+  status: MockApplicationStatus;
   match_score: number;
   created_at: string;
+  updated_at: string;
   student?: {
     id: string;
     full_name: string;
@@ -94,10 +98,12 @@ export interface MockJob {
   eligible_branches: string[];
   deadline: string;
   status: string;
+  created_at: string;
+  created_by: string | null;
   company: MockCompany;
   skills: { id: string; name: string }[];
-  job_skills: { skill: { id: string; name: string } | null }[] | undefined;
-  applications: any[] | undefined;
+  job_skills: { skill: { id: string; name: string } | null }[];
+  applications: any[];
 }
 
 export interface MockDrive {
@@ -193,6 +199,8 @@ export const SEED_JOBS: MockJob[] = [
     eligible_branches: ["CSE", "IT"],
     deadline: "2026-10-30",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-seed",
     company: getCompanyById("c4"),
     skills: getSkillsByIds(["sk6", "sk7", "sk12", "sk8"]),
     job_skills: getSkillsByIds(["sk6", "sk7", "sk12", "sk8"]).map((skill) => ({ skill })),
@@ -211,6 +219,8 @@ export const SEED_JOBS: MockJob[] = [
     eligible_branches: ["CSE", "IT"],
     deadline: "2026-10-25",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-seed",
     company: getCompanyById("c1"),
     skills: getSkillsByIds(["sk2", "sk5", "sk8", "sk7"]),
     job_skills: getSkillsByIds(["sk2", "sk5", "sk8", "sk7"]).map((skill) => ({ skill })),
@@ -229,6 +239,8 @@ export const SEED_JOBS: MockJob[] = [
     eligible_branches: ["CSE", "IT"],
     deadline: "2026-11-05",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-seed",
     company: getCompanyById("c4"),
     skills: getSkillsByIds(["sk4", "sk5", "sk13"]),
     job_skills: getSkillsByIds(["sk4", "sk5", "sk13"]).map((skill) => ({ skill })),
@@ -247,6 +259,8 @@ export const SEED_JOBS: MockJob[] = [
     eligible_branches: ["CSE", "IT", "ECE", "ME"],
     deadline: "2026-10-20",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-seed",
     company: getCompanyById("c2"),
     skills: getSkillsByIds(["sk7", "sk1", "sk15", "sk13"]),
     job_skills: getSkillsByIds(["sk7", "sk1", "sk15", "sk13"]).map((skill) => ({ skill })),
@@ -265,6 +279,8 @@ export const SEED_JOBS: MockJob[] = [
     eligible_branches: ["CSE", "IT", "ECE"],
     deadline: "2026-11-10",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-seed",
     company: getCompanyById("c5"),
     skills: getSkillsByIds(["sk16", "sk11", "sk1"]),
     job_skills: getSkillsByIds(["sk16", "sk11", "sk1"]).map((skill) => ({ skill })),
@@ -283,6 +299,8 @@ export const SEED_JOBS: MockJob[] = [
     eligible_branches: ["CSE", "IT"],
     deadline: "2026-11-15",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-seed",
     company: getCompanyById("c6"),
     skills: getSkillsByIds(["sk5", "sk6", "sk7"]),
     job_skills: getSkillsByIds(["sk5", "sk6", "sk7"]).map((skill) => ({ skill })),
@@ -301,6 +319,8 @@ export const SEED_JOBS: MockJob[] = [
     eligible_branches: ["ECE", "EE"],
     deadline: "2026-11-20",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-seed",
     company: getCompanyById("c3"),
     skills: getSkillsByIds(["sk14", "sk3", "sk9"]),
     job_skills: getSkillsByIds(["sk14", "sk3", "sk9"]).map((skill) => ({ skill })),
@@ -319,6 +339,8 @@ export const SEED_JOBS: MockJob[] = [
     eligible_branches: ["CSE", "IT"],
     deadline: "2026-10-18",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-seed",
     company: getCompanyById("c2"),
     skills: getSkillsByIds(["sk1", "sk10", "sk8"]),
     job_skills: getSkillsByIds(["sk1", "sk10", "sk8"]).map((skill) => ({ skill })),
@@ -347,6 +369,8 @@ export const getJobById = (id: string): MockJob =>
     eligible_branches: ["CSE"],
     deadline: "2026-12-31",
     status: "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-fallback",
     company: getCompanyById("c1"),
     skills: [],
     job_skills: [],
@@ -430,8 +454,8 @@ export const SEED_CERTS: MockCert[] = [
 export const MOCK_CERTS = SEED_CERTS;
 
 export const SEED_DOCUMENTS: MockDoc[] = [
-  { id: "d1", student_id: "s1", doc_type: "Resume", status: "verified", created_at: new Date().toISOString() },
-  { id: "d2", student_id: "s1", doc_type: "Semester Marksheets", status: "verified", created_at: new Date().toISOString() },
+  { id: "d1", student_id: "s1", doc_type: "Resume", status: "verified", note: "Verified by placement office", created_at: new Date().toISOString() },
+  { id: "d2", student_id: "s1", doc_type: "Semester Marksheets", status: "verified", note: null, created_at: new Date().toISOString() },
 ];
 
 export const MOCK_DOCUMENTS = SEED_DOCUMENTS;
@@ -444,6 +468,7 @@ export const SEED_APPLICATIONS: MockApplication[] = [
     status: "interview",
     match_score: 86,
     created_at: new Date(Date.now() - 5 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 5 * 86400000).toISOString(),
     job: getJobById("j1"),
     interviews: [
       {
@@ -465,6 +490,7 @@ export const SEED_APPLICATIONS: MockApplication[] = [
     status: "shortlisted",
     match_score: 79,
     created_at: new Date(Date.now() - 10 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 10 * 86400000).toISOString(),
     job: getJobById("j2"),
     interviews: [],
     offers: [],
@@ -476,6 +502,7 @@ export const SEED_APPLICATIONS: MockApplication[] = [
     status: "offered",
     match_score: 91,
     created_at: new Date(Date.now() - 18 * 86400000).toISOString(),
+    updated_at: new Date(Date.now() - 18 * 86400000).toISOString(),
     job: getJobById("j3"),
     interviews: [
       {
@@ -700,6 +727,7 @@ export function addMockDocument(docType: string): MockDoc[] {
     student_id: "s1",
     doc_type: docType,
     status: "pending",
+    note: null,
     created_at: new Date().toISOString(),
   };
   const updated = [...current, newDoc];
@@ -755,6 +783,8 @@ export function addMockJob(data: {
     eligible_branches: data.eligible_branches,
     deadline: data.deadline ?? "2026-11-30",
     status: data.status ?? "open",
+    created_at: new Date().toISOString(),
+    created_by: "demo-user",
     company: getCompanyById(compId),
     skills,
     job_skills: skills.map((skill) => ({ skill })),
@@ -824,6 +854,7 @@ export function addMockApplication(jobId: string, matchScore: number): MockAppli
     status: "applied",
     match_score: matchScore,
     created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
     job,
     interviews: [],
     offers: [],

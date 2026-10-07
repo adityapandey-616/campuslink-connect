@@ -6,10 +6,10 @@ import { Logo } from "@/components/Logo";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "CAMPUSLINK — AI-Powered Campus Placement Platform" },
-      { name: "description", content: "Connect students, recruiters and placement teams with AI matching, skill-gap analysis, drives, interviews and placement analytics." },
-      { property: "og:title", content: "CAMPUSLINK — Campus-to-Corporate Placement Platform" },
-      { property: "og:description", content: "AI matching, readiness scores, placement drives and analytics in one place." },
+      { title: "Skill to Hire — AI-Powered Campus-to-Corporate Placement Management & Analytics Platform" },
+      { name: "description", content: "Skill to Hire is an AI-powered campus-to-corporate placement management and analytics platform for students, recruiters, and placement teams." },
+      { property: "og:title", content: "Skill to Hire — AI-Powered Campus-to-Corporate Placement Management & Analytics Platform" },
+      { property: "og:description", content: "AI-powered campus-to-corporate placement management and analytics for students, recruiters, and placement teams." },
     ],
   }),
   component: Landing,
@@ -40,13 +40,13 @@ function Landing() {
       <section className="mx-auto grid max-w-6xl gap-12 px-6 pb-20 pt-12 lg:grid-cols-[1.1fr_1fr] lg:pt-20">
         <div>
           <div className="inline-flex items-center gap-2 rounded-full border bg-card px-3 py-1 text-xs text-muted-foreground">
-            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> Direct Access Mode · No Login Required
+            <span className="h-1.5 w-1.5 rounded-full bg-accent" /> AI-Powered Campus-to-Corporate Placement Management & Analytics Platform
           </div>
           <h1 className="mt-5 text-4xl font-bold leading-[1.05] text-foreground md:text-6xl">
-            Connecting Campus Talent With Corporate Opportunities.
+            Skill to Hire connects campus talent with corporate opportunities.
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-            One platform for students, recruiters and the placement cell — explore all three interactive portals directly with demo data.
+            One intelligent platform for students, recruiters, and placement teams to manage, analyze, and accelerate the complete hiring journey.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg"><Link to="/student">Student Dashboard <ArrowRight className="ml-1 h-4 w-4" /></Link></Button>
@@ -114,7 +114,7 @@ function Landing() {
           <Button asChild size="lg" variant="secondary"><Link to="/student">Open Student Dashboard</Link></Button>
         </div>
       </section>
-      <footer className="border-t py-6 text-center text-xs text-muted-foreground">© 2026 CAMPUSLINK · Campus-to-Corporate Placement Platform</footer>
+      <footer className="border-t py-6 text-center text-xs text-muted-foreground">© 2026 Skill to Hire · Campus-to-Corporate Placement Platform</footer>
     </div>
   );
 }

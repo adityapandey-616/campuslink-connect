@@ -17,11 +17,11 @@ const AnalyticsCharts = lazy(() =>
 );
 
 export const Route = createFileRoute("/_authenticated/admin/analytics")({
-  head: () => ({ meta: [{ title: "Placement Analytics & Intelligence — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Placement Analytics & Intelligence â€” Skill to Hire Admin" }] }),
   component: AdminAnalyticsPage,
 });
 
-export function AdminAnalyticsPage() {
+function AdminAnalyticsPage() {
   const [selectedBranch, setSelectedBranch] = useState("all");
   const [selectedCohort, setSelectedCohort] = useState("2025");
 
@@ -94,7 +94,7 @@ export function AdminAnalyticsPage() {
     const b4 = offers.filter((o) => o.ctc_lpa < 6).length; // < 6 LPA
 
     return [
-      { name: "≥ 10 LPA (Dream)", value: b1 },
+      { name: "â‰¥ 10 LPA (Dream)", value: b1 },
       { name: "8 - 10 LPA", value: b2 },
       { name: "6 - 8 LPA", value: b3 },
       { name: "< 6 LPA", value: b4 },
@@ -193,12 +193,12 @@ export function AdminAnalyticsPage() {
         />
         <Stat
           label="Average Package"
-          value={`₹${avgCTC} LPA`}
-          hint={`Median ₹${medianCTC} LPA`}
+          value={`â‚¹${avgCTC} LPA`}
+          hint={`Median â‚¹${medianCTC} LPA`}
         />
         <Stat
           label="Highest CTC Offered"
-          value={`₹${maxCTC} LPA`}
+          value={`â‚¹${maxCTC} LPA`}
           hint="Tier 1 Tech Anchor"
         />
         <Stat

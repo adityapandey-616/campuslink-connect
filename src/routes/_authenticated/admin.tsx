@@ -15,7 +15,7 @@ import {
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated/admin")({
-  head: () => ({ meta: [{ title: "Placement Admin — CAMPUSLINK" }] }),
+  head: () => ({ meta: [{ title: "Placement Admin — Skill to Hire" }] }),
   component: () => (
     <AppShell
       roleLabel="Placement Admin"

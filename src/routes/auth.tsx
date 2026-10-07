@@ -33,13 +33,13 @@ const authSearchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
-    meta: [{ title: "Sign In — CAMPUSLINK Portal Access" }],
+    meta: [{ title: "Sign In â€” Skill to Hire Portal Access" }],
   }),
   validateSearch: authSearchSchema,
   component: AuthPage,
 });
 
-export function AuthPage() {
+function AuthPage() {
   const search = useSearch({ from: "/auth" });
   const navigate = useNavigate();
 
@@ -255,7 +255,7 @@ export function AuthPage() {
                     <div>
                       <div className="font-semibold text-foreground">{acc.name}</div>
                       <div className="text-[10px] text-muted-foreground font-mono">
-                        {acc.email} · pwd: {acc.passwordHint}
+                        {acc.email} Â· pwd: {acc.passwordHint}
                       </div>
                     </div>
                     <Badge variant="secondary" className="capitalize text-[10px]">
@@ -270,7 +270,7 @@ export function AuthPage() {
 
         <div className="mt-6 text-center text-xs text-muted-foreground">
           <KeyRound className="inline h-3.5 w-3.5 mr-1 text-accent" />
-          Protected by CAMPUSLINK Role Guard with session persistence and client-side isolation.
+          Protected by Skill to Hire Role Guard with session persistence and client-side isolation.
         </div>
       </div>
     </div>

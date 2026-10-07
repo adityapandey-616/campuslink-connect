@@ -38,11 +38,11 @@ import { getMockApplications, getMockNotifications } from "@/lib/mock-data";
 import { statusStyles } from "@/lib/campus";
 
 export const Route = createFileRoute("/_authenticated/admin/")({
-  head: () => ({ meta: [{ title: "Placement Admin Dashboard — CAMPUSLINK" }] }),
+  head: () => ({ meta: [{ title: "Placement Admin Dashboard â€” Skill to Hire" }] }),
   component: AdminDashboard,
 });
 
-export function AdminDashboard() {
+function AdminDashboard() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Read latest reactive data from local store
@@ -143,12 +143,12 @@ export function AdminDashboard() {
         <Stat
           label="Upcoming Interviews"
           value={kpi.upcomingInterviews}
-          hint={conflictsCount > 0 ? `⚠️ ${conflictsCount} conflict detected` : "No schedule clash"}
+          hint={conflictsCount > 0 ? `âš ï¸ ${conflictsCount} conflict detected` : "No schedule clash"}
         />
         <Stat
           label="Offers Released"
           value={kpi.offersReleased}
-          hint={`Avg ₹${kpi.averageCTC} LPA · Max ₹${kpi.highestCTC} LPA`}
+          hint={`Avg â‚¹${kpi.averageCTC} LPA Â· Max â‚¹${kpi.highestCTC} LPA`}
         />
       </section>
 
@@ -205,9 +205,9 @@ export function AdminDashboard() {
                       </div>
                       <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         <span className="font-medium text-foreground/80">{drive.company?.name}</span>
-                        <span>·</span>
+                        <span>Â·</span>
                         <span className="flex items-center gap-1"><Clock className="h-3 w-3" /> {drive.drive_date} at {drive.drive_time}</span>
-                        <span>·</span>
+                        <span>Â·</span>
                         <span>{drive.venue}</span>
                       </div>
                     </div>
@@ -259,7 +259,7 @@ export function AdminDashboard() {
                         )}
                       </div>
                       <div className="mt-1 text-xs text-muted-foreground">
-                        <span className="font-medium text-foreground">{item.company_name}</span> · {item.round} · {new Date(item.scheduled_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
+                        <span className="font-medium text-foreground">{item.company_name}</span> Â· {item.round} Â· {new Date(item.scheduled_at).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}
                       </div>
                       {item.has_conflict && item.conflict_reason && (
                         <p className="mt-1 text-[11px] font-medium text-amber-700 dark:text-amber-300">
@@ -432,10 +432,10 @@ export function AdminDashboard() {
                 <div key={offer.id} className="flex items-center justify-between rounded-lg border bg-background/50 p-3 text-xs">
                   <div>
                     <div className="font-semibold text-foreground">{offer.student_name}</div>
-                    <div className="text-muted-foreground text-[11px]">{offer.company_name} · {offer.job_title}</div>
+                    <div className="text-muted-foreground text-[11px]">{offer.company_name} Â· {offer.job_title}</div>
                   </div>
                   <div className="text-right">
-                    <div className="font-bold text-success text-sm">₹{offer.ctc_lpa} LPA</div>
+                    <div className="font-bold text-success text-sm">â‚¹{offer.ctc_lpa} LPA</div>
                     <Badge variant="outline" className="text-[10px] capitalize py-0 px-1 mt-0.5">
                       {offer.offer_status}
                     </Badge>

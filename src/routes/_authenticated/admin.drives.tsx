@@ -40,11 +40,11 @@ import {
 import { getMockJobs } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/admin/drives")({
-  head: () => ({ meta: [{ title: "Placement Drives — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Placement Drives â€” Skill to Hire Admin" }] }),
   component: AdminDrivesPage,
 });
 
-export function AdminDrivesPage() {
+function AdminDrivesPage() {
   const [drives, setDrives] = useState<AdminDriveDetail[]>(() => getAdminDrives());
   const [companies] = useState(() => getAdminCompanies());
   const [jobs] = useState(() => getMockJobs());
@@ -282,7 +282,7 @@ export function AdminDrivesPage() {
                 <div className="flex flex-wrap items-center gap-2 text-xs mb-4">
                   <span className="text-muted-foreground">Cutoff:</span>
                   <Badge variant="outline" className="text-[10px] font-semibold">
-                    ≥ {d.min_cgpa} CGPA
+                    â‰¥ {d.min_cgpa} CGPA
                   </Badge>
                   <span className="text-muted-foreground">Branches:</span>
                   <div className="flex gap-1">
@@ -354,7 +354,7 @@ export function AdminDrivesPage() {
                 <Badge variant="outline" className="capitalize text-xs">{viewingDrive.status}</Badge>
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Hosted by {viewingDrive.company?.name} · {viewingDrive.mode} Mode
+                Hosted by {viewingDrive.company?.name} Â· {viewingDrive.mode} Mode
               </DialogDescription>
             </DialogHeader>
 

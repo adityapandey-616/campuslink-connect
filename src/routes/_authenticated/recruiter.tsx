@@ -3,7 +3,7 @@ import { BriefcaseBusiness, Building2, CalendarDays, FileText, LayoutDashboard, 
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated/recruiter")({
-  head: () => ({ meta: [{ title: "Recruiter — CAMPUSLINK" }] }),
+  head: () => ({ meta: [{ title: "Recruiter — Skill to Hire" }] }),
   component: () => (
     <AppShell
       roleLabel="Recruiter"

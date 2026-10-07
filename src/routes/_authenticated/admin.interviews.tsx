@@ -38,11 +38,11 @@ import {
 import { getMockJobs } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/admin/interviews")({
-  head: () => ({ meta: [{ title: "Interview Scheduling — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Interview Scheduling â€” Skill to Hire Admin" }] }),
   component: AdminInterviewsPage,
 });
 
-export function AdminInterviewsPage() {
+function AdminInterviewsPage() {
   const [interviews, setInterviews] = useState<AdminInterviewItem[]>(() => getAdminInterviews());
   const [students] = useState(() => getAdminStudents());
   const [companies] = useState(() => getAdminCompanies());
@@ -255,7 +255,7 @@ export function AdminInterviewsPage() {
                   </div>
 
                   <div className="text-xs text-muted-foreground">
-                    <strong className="text-foreground font-medium">{item.company_name}</strong> · {item.job_title} · <span className="text-accent font-medium">{item.round}</span>
+                    <strong className="text-foreground font-medium">{item.company_name}</strong> Â· {item.job_title} Â· <span className="text-accent font-medium">{item.round}</span>
                   </div>
 
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground pt-1">

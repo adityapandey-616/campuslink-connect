@@ -10,10 +10,10 @@ import { Logo } from "@/components/Logo";
 export const Route = createFileRoute("/reset-password")({
   head: () => ({
     meta: [
-      { title: "Set a new password — CAMPUSLINK" },
-      { name: "description", content: "Choose a new password for your CAMPUSLINK account." },
-      { property: "og:title", content: "Set a new password — CAMPUSLINK" },
-      { property: "og:description", content: "Reset your CAMPUSLINK password." },
+      { title: "Set a new password — Skill to Hire" },
+      { name: "description", content: "Choose a new password for your Skill to Hire account." },
+      { property: "og:title", content: "Set a new password — Skill to Hire" },
+      { property: "og:description", content: "Reset your Skill to Hire password." },
     ],
   }),
   component: ResetPassword,

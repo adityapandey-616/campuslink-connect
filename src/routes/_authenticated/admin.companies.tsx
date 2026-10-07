@@ -39,11 +39,11 @@ import {
 import { getMockJobs, getMockApplications } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/admin/companies")({
-  head: () => ({ meta: [{ title: "Company Management — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Company Management â€” Skill to Hire Admin" }] }),
   component: AdminCompaniesPage,
 });
 
-export function AdminCompaniesPage() {
+function AdminCompaniesPage() {
   const [companies, setCompanies] = useState<AdminCompany[]>(() => getAdminCompanies());
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -306,7 +306,7 @@ export function AdminCompaniesPage() {
                   </DialogTitle>
                   <DialogDescription className="text-xs mt-1 flex items-center gap-2">
                     <span>{selectedCompany.location}</span>
-                    <span>·</span>
+                    <span>Â·</span>
                     <a
                       href={selectedCompany.website}
                       target="_blank"
@@ -373,7 +373,7 @@ export function AdminCompaniesPage() {
                       <div key={j.id} className="flex items-center justify-between rounded-lg border p-3 text-xs">
                         <div>
                           <div className="font-semibold text-foreground">{j.title}</div>
-                          <div className="text-muted-foreground text-[11px]">{j.location} · ₹{j.ctc_lpa} LPA · Cutoff: {j.min_cgpa} CGPA</div>
+                          <div className="text-muted-foreground text-[11px]">{j.location} Â· â‚¹{j.ctc_lpa} LPA Â· Cutoff: {j.min_cgpa} CGPA</div>
                         </div>
                         <Badge variant="outline" className="text-[10px] capitalize">
                           {j.status}
@@ -399,7 +399,7 @@ export function AdminCompaniesPage() {
                       <div key={d.id} className="flex items-center justify-between rounded-lg border p-3 text-xs">
                         <div>
                           <div className="font-semibold text-foreground">{d.title}</div>
-                          <div className="text-muted-foreground text-[11px]">{d.drive_date} · {d.venue}</div>
+                          <div className="text-muted-foreground text-[11px]">{d.drive_date} Â· {d.venue}</div>
                         </div>
                         <Badge variant="secondary" className="text-[10px] capitalize">
                           {d.status}
@@ -492,9 +492,9 @@ export function AdminCompaniesPage() {
             <div>
               <label className="font-medium text-foreground">Hiring Tier</label>
               <select name="tier" className="h-9 w-full rounded-md border bg-card px-2.5 text-xs text-foreground mt-1">
-                <option value="Tier 1 (Dream)">Tier 1 (Dream - ₹10+ LPA)</option>
-                <option value="Tier 2 (Core)">Tier 2 (Core - ₹6-10 LPA)</option>
-                <option value="Tier 3 (Mass)">Tier 3 (Mass - ₹3.5-6 LPA)</option>
+                <option value="Tier 1 (Dream)">Tier 1 (Dream - â‚¹10+ LPA)</option>
+                <option value="Tier 2 (Core)">Tier 2 (Core - â‚¹6-10 LPA)</option>
+                <option value="Tier 3 (Mass)">Tier 3 (Mass - â‚¹3.5-6 LPA)</option>
               </select>
             </div>
 

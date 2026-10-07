@@ -36,11 +36,11 @@ import {
 } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/admin/notifications")({
-  head: () => ({ meta: [{ title: "Notifications & Alerts — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Notifications & Alerts â€” Skill to Hire Admin" }] }),
   component: AdminNotificationsPage,
 });
 
-export function AdminNotificationsPage() {
+function AdminNotificationsPage() {
   const [notifications, setNotifications] = useState<MockNotification[]>(() => getMockNotifications());
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [isBroadcastOpen, setIsBroadcastOpen] = useState(false);

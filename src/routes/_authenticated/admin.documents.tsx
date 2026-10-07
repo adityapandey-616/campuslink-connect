@@ -35,11 +35,11 @@ import {
 } from "@/lib/admin-data";
 
 export const Route = createFileRoute("/_authenticated/admin/documents")({
-  head: () => ({ meta: [{ title: "Offers & Documents Verification — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Offers & Documents Verification â€” Skill to Hire Admin" }] }),
   component: AdminOffersAndDocumentsPage,
 });
 
-export function AdminOffersAndDocumentsPage() {
+function AdminOffersAndDocumentsPage() {
   const [activeTab, setActiveTab] = useState<"documents" | "offers">("documents");
   const [documents, setDocuments] = useState<AdminDocumentItem[]>(() => getAdminDocuments());
   const [offers, setOffers] = useState<AdminOfferItem[]>(() => getAdminOffers());
@@ -203,7 +203,7 @@ export function AdminOffersAndDocumentsPage() {
                       <td className="p-3.5 font-medium text-foreground">
                         <div className="font-semibold text-sm">{doc.student_name}</div>
                         <div className="text-[11px] text-muted-foreground font-mono">
-                          {doc.student_roll} · {doc.student_branch}
+                          {doc.student_roll} Â· {doc.student_branch}
                         </div>
                       </td>
                       <td className="p-3.5">
@@ -323,7 +323,7 @@ export function AdminOffersAndDocumentsPage() {
                       <td className="p-3.5 font-medium text-foreground">
                         <div className="font-semibold text-sm">{o.student_name}</div>
                         <div className="text-[11px] text-muted-foreground font-mono">
-                          {o.student_roll} · {o.student_branch}
+                          {o.student_roll} Â· {o.student_branch}
                         </div>
                       </td>
                       <td className="p-3.5">
@@ -331,7 +331,7 @@ export function AdminOffersAndDocumentsPage() {
                         <div className="text-[11px] text-muted-foreground">{o.job_title}</div>
                       </td>
                       <td className="p-3.5">
-                        <span className="font-bold text-success text-sm">₹{o.ctc_lpa} LPA</span>
+                        <span className="font-bold text-success text-sm">â‚¹{o.ctc_lpa} LPA</span>
                       </td>
                       <td className="p-3.5 text-muted-foreground">{o.offer_date}</td>
                       <td className="p-3.5">
@@ -429,7 +429,7 @@ export function AdminOffersAndDocumentsPage() {
                 <Badge variant="outline" className="text-xs capitalize">{previewDoc.status}</Badge>
               </DialogTitle>
               <DialogDescription className="text-xs">
-                Candidate: {previewDoc.student_name} ({previewDoc.student_roll} · {previewDoc.student_branch})
+                Candidate: {previewDoc.student_name} ({previewDoc.student_roll} Â· {previewDoc.student_branch})
               </DialogDescription>
             </DialogHeader>
 

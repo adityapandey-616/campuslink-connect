@@ -100,7 +100,7 @@ function Profile() {
   const { student, skills, projects, certs, docs } = me.data;
   const sid = student.id;
   const { pct, checks } = computeProfileCompletion(
-    student as Record<string, unknown>,
+    student as unknown as Record<string, unknown>,
     skills, projects, certs, docs
   );
 

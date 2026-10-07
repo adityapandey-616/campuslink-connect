@@ -39,7 +39,7 @@ function CandidateDetail() {
       updateMockApplicationStatus(applicationId, status);
       if (status === "interview") {
         const when = new Date(Date.now() + 3 * 86400000).toISOString();
-        addMockInterview(applicationId, { round: "Technical Round 1", scheduled_at: when, mode: "Online", location: "Campuslink Interview" });
+        addMockInterview(applicationId, { round: "Technical Round 1", scheduled_at: when, mode: "Online", location: "Skill to Hire Interview" });
       }
       return status;
     },

@@ -44,11 +44,11 @@ import {
 import { computeReadiness, statusStyles } from "@/lib/campus";
 
 export const Route = createFileRoute("/_authenticated/admin/students")({
-  head: () => ({ meta: [{ title: "Student Management — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Student Management â€” Skill to Hire Admin" }] }),
   component: AdminStudentsPage,
 });
 
-export function AdminStudentsPage() {
+function AdminStudentsPage() {
   const [students, setStudents] = useState<MockCandidate[]>(() => getAdminStudents());
   const [search, setSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("all");
@@ -259,7 +259,7 @@ export function AdminStudentsPage() {
             onClick={() => setEligibilityFilter("high-cgpa")}
             className={`rounded-full px-2.5 py-0.5 transition-colors ${eligibilityFilter === "high-cgpa" ? "bg-accent text-accent-foreground font-medium" : "bg-secondary text-muted-foreground hover:bg-muted"}`}
           >
-            CGPA ≥ 8.0 ({studentRows.filter((s) => Number(s.cgpa) >= 8.0).length})
+            CGPA â‰¥ 8.0 ({studentRows.filter((s) => Number(s.cgpa) >= 8.0).length})
           </button>
           <button
             onClick={() => setEligibilityFilter("backlogs")}
@@ -416,7 +416,7 @@ export function AdminStudentsPage() {
                     <Badge variant="outline" className="text-xs">{selectedStudent.branch}</Badge>
                   </DialogTitle>
                   <DialogDescription className="text-xs mt-1">
-                    Roll No: {selectedStudent.roll_no} · {selectedStudent.email}
+                    Roll No: {selectedStudent.roll_no} Â· {selectedStudent.email}
                   </DialogDescription>
                 </div>
                 <div className="flex items-center gap-2">

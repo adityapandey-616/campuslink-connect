@@ -1,6 +1,6 @@
-# CampusLink Connect
+# Skill to Hire
 
-Build a complete, modern, production-quality web application called CAMPUSLINK: AI-Powered Campus-to-Corporate Placement Management & Analytics Platform based on the attached project specification.
+Build a complete, modern, production-quality web application called Skill to Hire: AI-Powered Campus-to-Corporate Placement Management & Analytics Platform based on the attached project specification.
 
 This project was built with [Lovable](https://lovable.dev).
 

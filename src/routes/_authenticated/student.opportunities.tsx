@@ -47,9 +47,6 @@ function Opportunities() {
     },
   });
 
-  if (me.isLoading || jobs.isLoading) return <Loading />;
-  if (!me.data) return <Empty>Couldn't load your profile.</Empty>;
-
   const applied = new Set((apps.data ?? []).map((a) => a.job_id));
   const allJobs = jobs.data ?? [];
 
@@ -58,8 +55,9 @@ function Opportunities() {
   const locations = [...new Set(allJobs.map((j) => j.location))];
 
   const list = useMemo(() => {
+    if (!me.data) return [];
     return allJobs
-      .map((j) => ({ j, r: matchFor(me.data!, j) }))
+      .map((j) => ({ j, r: matchFor(me.data, j) }))
       .filter(({ j, r }) => {
         if (onlyEligible && !r.eligible) return false;
         if (filterType && j.job_type !== filterType) return false;
@@ -78,9 +76,12 @@ function Opportunities() {
       .sort((a, b) => b.r.score - a.r.score);
   }, [allJobs, me.data, onlyEligible, filterType, filterLocation, search]);
 
+  if (me.isLoading || jobs.isLoading) return <Loading />;
+  if (!me.data) return <Empty>Couldn't load your profile.</Empty>;
+
   const sel = open ? matchFor(me.data, open) : null;
   const hasFilters = onlyEligible || filterType || filterLocation;
-  const eligibleCount = allJobs.filter((j) => matchFor(me.data!, j).eligible).length;
+  const eligibleCount = allJobs.filter((j) => matchFor(me.data, j).eligible).length;
 
   return (
     <>

@@ -23,11 +23,11 @@ import {
 } from "@/lib/admin-data";
 
 export const Route = createFileRoute("/_authenticated/admin/settings")({
-  head: () => ({ meta: [{ title: "Placement Cell Settings — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Placement Cell Settings â€” Skill to Hire Admin" }] }),
   component: AdminSettingsPage,
 });
 
-export function AdminSettingsPage() {
+function AdminSettingsPage() {
   const [settings, setSettings] = useState<AdminSettings>(() => getAdminSettings());
   const [isSaving, setIsSaving] = useState(false);
 

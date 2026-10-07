@@ -3,7 +3,7 @@ import { Bell, Briefcase, ClipboardList, FileText, GraduationCap, LayoutDashboar
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated/student")({
-  head: () => ({ meta: [{ title: "Student — CAMPUSLINK" }] }),
+  head: () => ({ meta: [{ title: "Student — Skill to Hire" }] }),
   component: () => (
     <AppShell
       roleLabel="Student"

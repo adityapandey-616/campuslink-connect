@@ -11,6 +11,8 @@ import {
   getMockNotifications,
   markNotificationRead,
   getMockDrives,
+  type MockApplication,
+  type MockInterview,
 } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/student/")({
@@ -69,7 +71,7 @@ function StudentDashboard() {
     .sort((a, b) => b.r.score - a.r.score)
     .slice(0, 4);
 
-  const upcoming = (apps.data ?? [])
+  const upcoming: Array<MockInterview & { job?: MockApplication["job"] }> = (apps.data ?? [])
     .flatMap((a) => a.interviews.map((i) => ({ ...i, job: a.job })))
     .filter((i) => new Date(i.scheduled_at) > new Date())
     .sort((a, b) => a.scheduled_at.localeCompare(b.scheduled_at));
@@ -81,7 +83,7 @@ function StudentDashboard() {
   const topGaps = [...gaps.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5);
 
   const { pct, checks } = profileCompletion({
-    student: m.student as Record<string, unknown>,
+    student: m.student as unknown as Record<string, unknown>,
     skills: m.skills,
     projects: m.projects,
     certs: m.certs,

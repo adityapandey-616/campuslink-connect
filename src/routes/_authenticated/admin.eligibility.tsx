@@ -34,11 +34,11 @@ import {
 } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/admin/eligibility")({
-  head: () => ({ meta: [{ title: "Eligibility & Shortlisting — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Eligibility & Shortlisting â€” Skill to Hire Admin" }] }),
   component: AdminEligibilityPage,
 });
 
-export function AdminEligibilityPage() {
+function AdminEligibilityPage() {
   const jobs = useMemo(() => getMockJobs(), []);
   const [selectedJobId, setSelectedJobId] = useState<string>(jobs[0]?.id ?? "j1");
   const [students] = useState<MockCandidate[]>(() => getAdminStudents());
@@ -136,7 +136,7 @@ export function AdminEligibilityPage() {
               >
                 {jobs.map((j) => (
                   <option key={j.id} value={j.id}>
-                    {j.title} · {j.company.name} (₹{j.ctc_lpa} LPA)
+                    {j.title} Â· {j.company.name} (â‚¹{j.ctc_lpa} LPA)
                   </option>
                 ))}
               </select>
@@ -146,7 +146,7 @@ export function AdminEligibilityPage() {
           {/* Quick Criteria Badges */}
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <Badge variant="outline" className="py-1 px-2.5">
-              Cutoff: ≥ {selectedJob.min_cgpa} CGPA
+              Cutoff: â‰¥ {selectedJob.min_cgpa} CGPA
             </Badge>
             <Badge variant="outline" className="py-1 px-2.5">
               Max Backlogs: {selectedJob.max_backlogs}
@@ -320,7 +320,7 @@ export function AdminEligibilityPage() {
                     <ul className="space-y-1 text-[11px] text-muted-foreground">
                       {reasons.map((r, i) => (
                         <li key={i} className="flex items-start gap-1.5">
-                          <span className="text-success font-bold">✓</span> {r}
+                          <span className="text-success font-bold">âœ“</span> {r}
                         </li>
                       ))}
                     </ul>
@@ -342,12 +342,12 @@ export function AdminEligibilityPage() {
                     <AlertTriangle className="h-3.5 w-3.5 text-destructive" /> Blockers & Skill Gaps
                   </div>
                   {blockers.length === 0 && missingSkills.length === 0 ? (
-                    <div className="text-success text-[11px] font-medium">No criteria blockers found — 100% compliant.</div>
+                    <div className="text-success text-[11px] font-medium">No criteria blockers found â€” 100% compliant.</div>
                   ) : (
                     <ul className="space-y-1 text-[11px] text-muted-foreground">
                       {blockers.map((b, i) => (
                         <li key={i} className="flex items-start gap-1.5 text-destructive font-medium">
-                          <span className="font-bold">✗</span> {b}
+                          <span className="font-bold">âœ—</span> {b}
                         </li>
                       ))}
                     </ul>

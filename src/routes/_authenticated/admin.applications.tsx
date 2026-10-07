@@ -33,11 +33,11 @@ import { getAdminCompanies, getAdminStudents } from "@/lib/admin-data";
 import { statusStyles } from "@/lib/campus";
 
 export const Route = createFileRoute("/_authenticated/admin/applications")({
-  head: () => ({ meta: [{ title: "Application Management — CAMPUSLINK Admin" }] }),
+  head: () => ({ meta: [{ title: "Application Management â€” Skill to Hire Admin" }] }),
   component: AdminApplicationsPage,
 });
 
-export function AdminApplicationsPage() {
+function AdminApplicationsPage() {
   const [apps, setApps] = useState<MockApplication[]>(() => getMockApplications());
   const [companies] = useState(() => getAdminCompanies());
   const [jobs] = useState(() => getMockJobs());
@@ -196,7 +196,7 @@ export function AdminApplicationsPage() {
                     <td className="p-3.5 font-medium text-foreground">
                       <div className="font-semibold text-sm">{app.student?.full_name ?? "Candidate"}</div>
                       <div className="text-[11px] text-muted-foreground font-mono">
-                        {app.student?.branch} · CGPA {app.student?.cgpa ?? 8.0}
+                        {app.student?.branch} Â· CGPA {app.student?.cgpa ?? 8.0}
                       </div>
                     </td>
                     <td className="p-3.5">
@@ -223,14 +223,14 @@ export function AdminApplicationsPage() {
                     <td className="p-3.5 text-muted-foreground">
                       {app.offers.length > 0 ? (
                         <span className="text-success font-semibold flex items-center gap-1">
-                          <Award className="h-3.5 w-3.5" /> Offered (₹{app.offers[0]?.ctc_lpa} LPA)
+                          <Award className="h-3.5 w-3.5" /> Offered (â‚¹{app.offers[0]?.ctc_lpa} LPA)
                         </span>
                       ) : app.interviews.length > 0 ? (
                         <span className="text-accent flex items-center gap-1">
                           <CalendarCheck className="h-3.5 w-3.5" /> {app.interviews.length} round(s)
                         </span>
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground">â€”</span>
                       )}
                     </td>
                     <td className="p-3.5 text-right" onClick={(e) => e.stopPropagation()}>
@@ -294,12 +294,12 @@ export function AdminApplicationsPage() {
                 <div>
                   <div className="text-muted-foreground">Candidate Branch & CGPA</div>
                   <div className="text-sm font-semibold mt-0.5">
-                    {selectedApp.student?.branch} · {selectedApp.student?.cgpa} CGPA
+                    {selectedApp.student?.branch} Â· {selectedApp.student?.cgpa} CGPA
                   </div>
                 </div>
                 <div>
                   <div className="text-muted-foreground">Role CTC Compensation</div>
-                  <div className="text-sm font-semibold mt-0.5">₹{selectedApp.job?.ctc_lpa} LPA</div>
+                  <div className="text-sm font-semibold mt-0.5">â‚¹{selectedApp.job?.ctc_lpa} LPA</div>
                 </div>
               </div>
 

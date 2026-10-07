@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Empty, Loading, PageHeader } from "@/components/AppShell";
 import { myApplicationsQuery } from "@/lib/student-data";
 import { statusStyles } from "@/lib/campus";
-import { updateMockOfferStatus, addMockNotification } from "@/lib/mock-data";
+import { updateMockOfferStatus, addMockNotification, type MockApplication } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/student/applications")({
   component: Applications,
@@ -46,7 +46,7 @@ function Applications() {
 
   if (apps.isLoading) return <Loading />;
 
-  const list = apps.data ?? [];
+  const list: MockApplication[] = apps.data ?? [];
   const filtered = tab === "all" ? list : list.filter((a) => a.status === tab);
   const counts = STATUS_TABS.reduce<Record<string, number>>((acc, s) => {
     acc[s] = s === "all" ? list.length : list.filter((a) => a.status === s).length;
