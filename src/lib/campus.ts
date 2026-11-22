@@ -1,11 +1,17 @@
 import { supabase } from "@/integrations/supabase/client";
 
-export type Role = "student" | "recruiter" | "admin";
+export type Role = "student" | "recruiter" | "admin" | "placement_admin";
+export type PortalPath = "/student" | "/recruiter" | "/admin";
+
+export function portalPathForRole(role: Role): PortalPath {
+  if (role === "admin" || role === "placement_admin") return "/admin";
+  return `/${role}`;
+}
 
 export function getActiveRole(): Role {
   if (typeof window !== "undefined") {
     const r = localStorage.getItem("campuslink_active_role") as Role;
-    if (r === "student" || r === "recruiter" || r === "admin") return r;
+    if (r === "student" || r === "recruiter" || r === "admin" || r === "placement_admin") return r;
   }
   return "student";
 }
@@ -17,22 +23,35 @@ export function setActiveRole(role: Role) {
 }
 
 export async function getMyRoles(): Promise<Role[]> {
-  try {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u.user) return ["student", "recruiter", "admin"];
-    const { data } = await supabase.from("user_roles").select("role").eq("user_id", u.user.id);
-    const roles = (data ?? []).map((r) => r.role as Role);
-    return roles.length ? roles : ["student", "recruiter", "admin"];
-  } catch {
-    return ["student", "recruiter", "admin"];
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) {
+    throw new Error(`Failed to verify the current Supabase user: ${userError.message}`);
   }
+  if (!userData.user) return [];
+
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", userData.user.id)
+    .maybeSingle();
+  if (error) {
+    throw new Error(`Failed to load assigned portal roles: ${error.message}`);
+  }
+
+  const role = data?.role;
+  return role === "student" ||
+    role === "recruiter" ||
+    role === "admin" ||
+    role === "placement_admin"
+    ? [role]
+    : [];
 }
 
 export function homeFor(roles: Role[]): "/admin" | "/recruiter" | "/student" {
   const active = getActiveRole();
-  if (roles.includes(active)) return `/${active}`;
+  if (roles.includes(active)) return portalPathForRole(active);
   if (roles.includes("student")) return "/student";
-  if (roles.includes("admin")) return "/admin";
+  if (roles.includes("admin") || roles.includes("placement_admin")) return "/admin";
   if (roles.includes("recruiter")) return "/recruiter";
   return "/student";
 }
@@ -43,6 +62,7 @@ export interface MatchInput {
   backlogs: number;
   branch: string;
 }
+
 export interface JobLike {
   min_cgpa: number;
   max_backlogs: number;
@@ -56,10 +76,13 @@ export function computeMatch(s: MatchInput, j: JobLike) {
   const coverage = j.skills.length ? matched.length / j.skills.length : 1;
   const reasons: string[] = [];
   const blockers: string[] = [];
-  if (!j.eligible_branches.includes(s.branch)) blockers.push(`${s.branch} is not an eligible branch`);
-  if (s.cgpa < Number(j.min_cgpa)) blockers.push(`CGPA ${s.cgpa} is below the ${j.min_cgpa} cutoff`);
+  if (!j.eligible_branches.includes(s.branch))
+    blockers.push(`${s.branch} is not an eligible branch`);
+  if (s.cgpa < Number(j.min_cgpa))
+    blockers.push(`CGPA ${s.cgpa} is below the ${j.min_cgpa} cutoff`);
   else reasons.push(`CGPA ${s.cgpa} meets the ${j.min_cgpa} cutoff`);
-  if (s.backlogs > j.max_backlogs) blockers.push(`${s.backlogs} backlogs exceed the limit of ${j.max_backlogs}`);
+  if (s.backlogs > j.max_backlogs)
+    blockers.push(`${s.backlogs} backlogs exceed the limit of ${j.max_backlogs}`);
   if (matched.length) reasons.push(`You have ${matched.map((m) => m.name).join(", ")}`);
   const academic = Math.min(1, Math.max(0, (s.cgpa - Number(j.min_cgpa) + 2) / 4));
   let score = Math.round(coverage * 65 + academic * 25 + (blockers.length ? 0 : 10));

@@ -1,231 +1,198 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Suspense, lazy, useMemo, useState } from "react";
 import { Download } from "lucide-react";
-import { toast } from "sonner";
-import { PageHeader, Stat } from "@/components/AppShell";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { Empty, Loading, PageHeader, Stat } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
-import {
-  getAdminStudents,
-  getAdminOffers,
-  getAdminCompanies,
-} from "@/lib/admin-data";
-import { getMockApplications } from "@/lib/mock-data";
-import { computeReadiness } from "@/lib/campus";
-
-const AnalyticsCharts = lazy(() =>
-  import("@/components/admin-analytics-charts").then((module) => ({ default: module.AnalyticsCharts }))
-);
+import { AnalyticsCharts } from "@/components/admin-analytics-charts";
+import { adminOverviewQuery } from "@/lib/admin-live-data";
 
 export const Route = createFileRoute("/_authenticated/admin/analytics")({
-  head: () => ({ meta: [{ title: "Placement Analytics & Intelligence â€” Skill to Hire Admin" }] }),
+  head: () => ({ meta: [{ title: "Placement Analytics — Skill to Hire Admin" }] }),
   component: AdminAnalyticsPage,
 });
 
 function AdminAnalyticsPage() {
+  const overview = useQuery(adminOverviewQuery);
   const [selectedBranch, setSelectedBranch] = useState("all");
-  const [selectedCohort, setSelectedCohort] = useState("2025");
+  const [selectedYear, setSelectedYear] = useState("all");
 
-  const students = useMemo(() => getAdminStudents(), []);
-  const apps = useMemo(() => getMockApplications(), []);
-  const offers = useMemo(() => getAdminOffers(), []);
-  const companies = useMemo(() => getAdminCompanies(), []);
+  const data = overview.data;
+  const branches = useMemo(
+    () =>
+      [...new Set((data?.students ?? []).map((student) => student.branch).filter(Boolean))].sort(),
+    [data?.students],
+  );
+  const years = useMemo(
+    () =>
+      [
+        ...new Set(
+          (data?.students ?? [])
+            .map((student) => student.graduation_year)
+            .filter((year) => year !== null),
+        ),
+      ].sort((a, b) => b - a),
+    [data?.students],
+  );
 
-  // Filter cohort if needed
-  const cohortStudents = useMemo(() => {
-    return students.filter((s) => {
-      const matchBranch = selectedBranch === "all" || s.branch === selectedBranch;
-      return matchBranch;
-    });
-  }, [students, selectedBranch]);
+  const cohort = useMemo(
+    () =>
+      (data?.students ?? []).filter(
+        (student) =>
+          (selectedBranch === "all" || student.branch === selectedBranch) &&
+          (selectedYear === "all" || String(student.graduation_year) === selectedYear),
+      ),
+    [data?.students, selectedBranch, selectedYear],
+  );
+  const cohortProfileIds = useMemo(() => new Set(cohort.map((student) => student.id)), [cohort]);
+  const cohortApplications = useMemo(
+    () =>
+      (data?.applications ?? []).filter(
+        (application) =>
+          application.profile_id !== null && cohortProfileIds.has(application.profile_id),
+      ),
+    [data?.applications, cohortProfileIds],
+  );
+  const cohortApplicationIds = useMemo(
+    () => new Set(cohortApplications.map((application) => application.id)),
+    [cohortApplications],
+  );
+  const cohortOffers = useMemo(
+    () =>
+      (data?.offers ?? []).filter(
+        (offer) => offer.application_id !== null && cohortApplicationIds.has(offer.application_id),
+      ),
+    [data?.offers, cohortApplicationIds],
+  );
 
-  const placedCount = useMemo(() => {
-    return cohortStudents.filter((s) => s.placement_status === "placed").length;
-  }, [cohortStudents]);
+  if (overview.isLoading) return <Loading />;
+  if (overview.error || !data) {
+    return (
+      <Empty>
+        Live analytics could not be loaded:{" "}
+        {overview.error instanceof Error ? overview.error.message : "No data returned"}
+      </Empty>
+    );
+  }
 
-  const placementRate = cohortStudents.length
-    ? Math.round((placedCount / cohortStudents.length) * 100)
-    : 0;
+  const cohortBranches = [...new Set(cohort.map((student) => student.branch ?? "Unspecified"))];
+  const branchData = cohortBranches.map((branch) => ({
+    branch,
+    students: cohort.filter((student) => (student.branch ?? "Unspecified") === branch).length,
+  }));
+  const applicationStatuses = [
+    "applied",
+    "shortlisted",
+    "interview",
+    "offered",
+    "joined",
+    "rejected",
+  ];
+  const applicationStatusData = applicationStatuses.map((status) => ({
+    status,
+    count: cohortApplications.filter((application) => application.status === status).length,
+  }));
+  const interviewStatuses = [
+    ...new Set(data.interviews.map((interview) => interview.status)),
+  ].sort();
+  const interviewStatusData = interviewStatuses.map((status) => ({
+    status,
+    count: data.interviews.filter((interview) => interview.status === status).length,
+  }));
+  const companyOpportunityData = data.companies
+    .map((company) => ({
+      company: company.name,
+      opportunities: data.opportunities.filter(
+        (opportunity) => opportunity.company_id === company.id,
+      ).length,
+    }))
+    .filter((row) => row.opportunities > 0)
+    .sort((a, b) => b.opportunities - a.opportunities)
+    .slice(0, 10);
 
-  const ctcs = offers.map((o) => o.ctc_lpa);
-  const avgCTC = ctcs.length ? (ctcs.reduce((a, b) => a + b, 0) / ctcs.length).toFixed(1) : "0";
-  const maxCTC = ctcs.length ? Math.max(...ctcs) : 0;
-  const medianCTC = ctcs.length ? [...ctcs].sort((a, b) => a - b)[Math.floor(ctcs.length / 2)] : 0;
-
-  // Branch-wise placement data
-  const branchData = useMemo(() => {
-    return ["CSE", "IT", "ECE", "EE", "ME"].map((b) => {
-      const branchTotal = students.filter((s) => s.branch === b);
-      const placed = branchTotal.filter((s) => s.placement_status === "placed").length;
-      return {
-        branch: b,
-        total: branchTotal.length,
-        placed,
-        rate: branchTotal.length ? Math.round((placed / branchTotal.length) * 100) : 0,
-      };
-    });
-  }, [students]);
-
-  // Application Pipeline Funnel
-  const funnelData = useMemo(() => {
-    const stages = ["applied", "shortlisted", "interview", "offered", "joined", "rejected"];
-    return stages.map((st) => ({
-      name: st,
-      count: apps.filter((a) => a.status === st).length,
-    }));
-  }, [apps]);
-
-  // Company-wise Offer Distribution
-  const companyHiringData = useMemo(() => {
-    return companies.map((c) => {
-      const compOffers = offers.filter((o) => o.company_id === c.id);
-      return {
-        company: c.name,
-        offers: compOffers.length,
-        tier: c.tier,
-      };
-    }).filter((c) => c.offers > 0).sort((a, b) => b.offers - a.offers);
-  }, [companies, offers]);
-
-  // Salary Tier Bands
-  const ctcBands = useMemo(() => {
-    const b1 = offers.filter((o) => o.ctc_lpa >= 10).length; // Dream >= 10 LPA
-    const b2 = offers.filter((o) => o.ctc_lpa >= 8 && o.ctc_lpa < 10).length; // 8 - 10 LPA
-    const b3 = offers.filter((o) => o.ctc_lpa >= 6 && o.ctc_lpa < 8).length; // 6 - 8 LPA
-    const b4 = offers.filter((o) => o.ctc_lpa < 6).length; // < 6 LPA
-
-    return [
-      { name: "â‰¥ 10 LPA (Dream)", value: b1 },
-      { name: "8 - 10 LPA", value: b2 },
-      { name: "6 - 8 LPA", value: b3 },
-      { name: "< 6 LPA", value: b4 },
-    ].filter((b) => b.value > 0);
-  }, [offers]);
-
-  // Readiness distribution
-  const readinessDistribution = useMemo(() => {
-    let high = 0;
-    let moderate = 0;
-    let needsAttention = 0;
-
-    cohortStudents.forEach((s) => {
-      const r = computeReadiness({
-        cgpa: Number(s.cgpa),
-        backlogs: s.backlogs,
-        skills: s.student_skills.length,
-        projects: s.projects.length,
-        certs: s.certifications.length,
-        verifiedDocs: s.documents.filter((d) => d.status === "verified").length,
-      });
-
-      if (r.total >= 80) high++;
-      else if (r.total >= 60) moderate++;
-      else needsAttention++;
-    });
-
-    return [
-      { tier: "High Readiness (80+)", count: high },
-      { tier: "Moderate (60-79)", count: moderate },
-      { tier: "Needs Support (<60)", count: needsAttention },
+  const exportCsv = () => {
+    const rows = [
+      ["metric", "value"],
+      ["cohort_students", String(cohort.length)],
+      ["cohort_applications", String(cohortApplications.length)],
+      ["cohort_offers", String(cohortOffers.length)],
+      ...applicationStatusData.map(({ status, count }) => [
+        `applications_${status}`,
+        String(count),
+      ]),
+      ...interviewStatusData.map(({ status, count }) => [`interviews_${status}`, String(count)]),
     ];
-  }, [cohortStudents]);
-
-  const handleExportAnalyticsReport = () => {
-    toast.success("Comprehensive Placement Season Analytics Report downloaded (PDF).");
+    const content = rows
+      .map((row) => row.map((field) => `"${field.replaceAll('"', '""')}"`).join(","))
+      .join("\r\n");
+    const url = URL.createObjectURL(new Blob([content], { type: "text/csv;charset=utf-8" }));
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "skill-to-hire-live-analytics.csv";
+    anchor.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Placement Intelligence & Analytics"
-        subtitle="Cohort-wide salary distributions, branch conversion benchmarks, recruiter absorption rates, and pipeline conversion funnels."
+        title="Placement Analytics"
+        subtitle="Counts are derived from live records visible under current RLS policies. Unsupported placement and salary measures are intentionally omitted."
         action={
-          <div className="flex items-center gap-2">
-            <Button size="sm" variant="secondary" onClick={handleExportAnalyticsReport} className="gap-1.5">
-              <Download className="h-4 w-4" /> Export Report
-            </Button>
-          </div>
+          <Button size="sm" variant="secondary" onClick={exportCsv}>
+            <Download className="mr-2 h-4 w-4" />
+            Export live counts
+          </Button>
         }
       />
 
-      {/* Cohort & Branch Filters */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card p-4 shadow-xs">
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-medium text-muted-foreground">Placement Season:</span>
-            <select
-              value={selectedCohort}
-              onChange={(e) => setSelectedCohort(e.target.value)}
-              className="h-8 rounded-md border bg-card px-2 text-xs font-semibold text-foreground"
-            >
-              <option value="2025">2025-2026 Batch (Current)</option>
-              <option value="2024">2024-2025 Batch (Archive)</option>
-            </select>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs">
-            <span className="font-medium text-muted-foreground">Branch Filter:</span>
-            <select
-              value={selectedBranch}
-              onChange={(e) => setSelectedBranch(e.target.value)}
-              className="h-8 rounded-md border bg-card px-2 text-xs font-semibold text-foreground"
-            >
-              <option value="all">All Academic Branches</option>
-              <option value="CSE">CSE</option>
-              <option value="IT">IT</option>
-              <option value="ECE">ECE</option>
-              <option value="EE">EE</option>
-              <option value="ME">ME</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="text-xs text-muted-foreground">
-          Cohort Sample Size: <strong className="text-foreground">{cohortStudents.length} Students</strong>
-        </div>
+      <div className="grid gap-3 rounded-xl border bg-card p-4 sm:grid-cols-2">
+        <select
+          value={selectedBranch}
+          onChange={(event) => setSelectedBranch(event.target.value)}
+          className="h-9 rounded-md border bg-background px-3 text-sm"
+        >
+          <option value="all">All branches</option>
+          {branches.map((branch) => (
+            <option key={branch} value={branch ?? ""}>
+              {branch}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selectedYear}
+          onChange={(event) => setSelectedYear(event.target.value)}
+          className="h-9 rounded-md border bg-background px-3 text-sm"
+        >
+          <option value="all">All graduation years</option>
+          {years.map((year) => (
+            <option key={year} value={String(year)}>
+              {year}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Metric Cards */}
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-4">
-        <Stat
-          label="Placement Rate"
-          value={`${placementRate}%`}
-          hint={`${placedCount} of ${cohortStudents.length} students placed`}
-        />
-        <Stat
-          label="Average Package"
-          value={`â‚¹${avgCTC} LPA`}
-          hint={`Median â‚¹${medianCTC} LPA`}
-        />
-        <Stat
-          label="Highest CTC Offered"
-          value={`â‚¹${maxCTC} LPA`}
-          hint="Tier 1 Tech Anchor"
-        />
-        <Stat
-          label="Active Job Pipeline"
-          value={apps.length}
-          hint={`${offers.length} offers issued`}
-        />
+      <section className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <Stat label="Cohort profiles" value={cohort.length} hint="Filtered by branch/year" />
+        <Stat label="Applications" value={cohortApplications.length} hint="For selected profiles" />
+        <Stat label="Offers" value={cohortOffers.length} hint="Linked to selected applications" />
+        <Stat label="Companies" value={data.companies.length} hint="Live company records" />
       </section>
 
-      <Suspense
-        fallback={
-          <div className="grid gap-6 lg:grid-cols-2">
-            {Array.from({ length: 4 }).map((_, index) => (
-              <div key={index} className="h-72 animate-pulse rounded-xl border bg-card" />
-            ))}
-          </div>
-        }
-      >
-        <AnalyticsCharts
-          branchData={branchData}
-          funnelData={funnelData}
-          ctcBands={ctcBands}
-          readinessDistribution={readinessDistribution}
-          cohortStudents={cohortStudents}
-          companyHiringData={companyHiringData}
-        />
-      </Suspense>
+      <AnalyticsCharts
+        branchData={branchData}
+        applicationStatusData={applicationStatusData}
+        interviewStatusData={interviewStatusData}
+        companyOpportunityData={companyOpportunityData}
+      />
+
+      <section className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
+        This analytics query reads profiles, not the separate students relation represented in the
+        generated types. Placement and academic eligibility are therefore not joined into these
+        measures. Offers.salary has no known unit, so placement rate, readiness, eligibility, and
+        salary-band analytics are not reported.
+      </section>
     </div>
   );
 }

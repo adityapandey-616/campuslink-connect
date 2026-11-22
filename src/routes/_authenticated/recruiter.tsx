@@ -1,5 +1,12 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { BriefcaseBusiness, Building2, CalendarDays, FileText, LayoutDashboard, UserRoundSearch } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  Building2,
+  CalendarDays,
+  FileText,
+  LayoutDashboard,
+  UserRoundSearch,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated/recruiter")({

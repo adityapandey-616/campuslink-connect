@@ -1,182 +1,252 @@
 import { queryOptions } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { computeMatch, computeReadiness } from "./campus";
-import {
-  getMockStudent,
-  getMockStudentSkills,
-  getMockProjects,
-  getMockCertifications,
-  getMockDocuments,
-  getMockJobs,
-  getMockApplications,
-  type MockApplication,
-  MOCK_STUDENT,
-  MOCK_STUDENT_SKILLS,
-  MOCK_PROJECTS,
-  MOCK_CERTS,
-  MOCK_DOCUMENTS,
-  MOCK_JOBS,
-  MOCK_APPLICATIONS,
-} from "./mock-data";
 
-const SUPABASE_QUERY_TIMEOUT_MS = 5000;
-
-interface StudentRecord {
+export interface StudentApplication {
   id: string;
-  user_id: string;
-  full_name: string;
-  roll_no: string;
-  branch: string;
-  batch_year: number;
-  cgpa: number | string;
-  backlogs: number;
-  phone: string;
-  bio: string;
-  placement_status: string;
-}
-
-interface StudentProfileData {
-  student: StudentRecord;
-  skills: Array<{ id: string; name: string; category: string; level: number }>;
-  projects: ReturnType<typeof getMockProjects>;
-  certs: ReturnType<typeof getMockCertifications>;
-  docs: ReturnType<typeof getMockDocuments>;
-  readiness: ReturnType<typeof computeReadiness>;
-}
-
-async function withSupabaseFallback<T>(query: () => Promise<T>, fallback: T): Promise<T> {
-  const timeout = new Promise<never>((_, reject) => {
-    setTimeout(() => reject(new Error("Supabase request timed out.")), SUPABASE_QUERY_TIMEOUT_MS);
-  });
-
-  try {
-    return await Promise.race([query(), timeout]);
-  } catch {
-    return fallback;
-  }
-}
-
-async function fetchMe(): Promise<StudentProfileData> {
-  const student = getMockStudent();
-  const skills = getMockStudentSkills();
-  const projects = getMockProjects();
-  const certs = getMockCertifications();
-  const docs = getMockDocuments();
-  const fallback = {
-    student,
-    skills,
-    projects,
-    certs,
-    docs,
-    readiness: computeReadiness({
-      cgpa: Number(student.cgpa),
-      backlogs: student.backlogs,
-      skills: skills.length,
-      projects: projects.length,
-      certs: certs.length,
-      verifiedDocs: docs.filter((d) => d.status === "verified").length,
-    }),
-  };
-
-  return withSupabaseFallback(async () => {
-    const { data: u } = await supabase.auth.getUser();
-    if (!u?.user) throw new Error("No user");
-    const { data: studentData, error } = await supabase.from("students").select("*").eq("user_id", u.user.id).single();
-    if (error || !studentData) throw error || new Error("No student");
-    const [skillsData, projectsData, certsData, docsData] = await Promise.all([
-      supabase.from("student_skills").select("level, skill:skills(id,name,category)").eq("student_id", studentData.id),
-      supabase.from("projects").select("*").eq("student_id", studentData.id).order("created_at"),
-      supabase.from("certifications").select("*").eq("student_id", studentData.id).order("created_at"),
-      supabase.from("documents").select("*").eq("student_id", studentData.id).order("created_at"),
-    ]);
-    const skillList = (skillsData.data ?? []).map((s) => ({ ...s.skill!, level: s.level }));
-    const readiness = computeReadiness({
-      cgpa: Number(studentData.cgpa),
-      backlogs: studentData.backlogs,
-      skills: skillList.length,
-      projects: projectsData.data?.length ?? 0,
-      certs: certsData.data?.length ?? 0,
-      verifiedDocs: (docsData.data ?? []).filter((d) => d.status === "verified").length,
-    });
-    return {
-      student: studentData as StudentRecord,
-      skills: skillList,
-      projects: (projectsData.data ?? []) as StudentProfileData["projects"],
-      certs: (certsData.data ?? []) as StudentProfileData["certs"],
-      docs: (docsData.data ?? []) as StudentProfileData["docs"],
-      readiness,
-    };
-  }, fallback);
-}
-export const meQuery = queryOptions({ queryKey: ["me-student"], queryFn: fetchMe });
-
-export type Job = ReturnType<typeof getMockJobs>[number];
-
-async function fetchJobs(): Promise<Job[]> {
-  return withSupabaseFallback(async () => {
-    const { data, error } = await supabase
-      .from("jobs")
-      .select("*, company:companies(id,name,industry,location), job_skills(skill:skills(id,name))")
-      .order("created_at", { ascending: false });
-    if (error || !data || data.length === 0) throw error || new Error("No jobs");
-    return data.map((j) => ({
-      ...j,
-      skills: j.job_skills
-        .map((s) => s.skill)
-        .filter((skill): skill is NonNullable<typeof skill> => Boolean(skill)),
-    })) as Job[];
-  }, getMockJobs());
-}
-export const jobsQuery = queryOptions({ queryKey: ["jobs"], queryFn: fetchJobs });
-
-export type Me = Awaited<ReturnType<typeof fetchMe>>;
-
-export function matchFor(me: Me, job: Job) {
-  return computeMatch(
-    { studentSkillIds: new Set(me.skills.map((s) => s.id)), cgpa: Number(me.student.cgpa), backlogs: me.student.backlogs, branch: me.student.branch },
-    job,
-  );
-}
-
-interface SupabaseApplication {
-  id: string;
-  student_id: string;
-  job_id: string;
-  status: "applied" | "shortlisted" | "interview" | "offered" | "rejected" | "joined";
-  match_score: number;
-  created_at: string;
-  updated_at: string;
+  profile_id: string;
+  opportunity_id: string | null;
+  status: string | null;
+  applied_at: string;
+  resume_url: string | null;
   job: {
     id: string;
     title: string;
-    ctc_lpa: number;
     location: string;
-    company: { name: string };
-  };
+    company: { name: string } | null;
+  } | null;
   interviews: Array<{
     id: string;
+    application_id: string;
     scheduled_at: string;
-    round: string;
-    mode: string;
-    location: string;
+    interview_type: string;
+    meeting_link: string | null;
+    feedback: string | null;
     status: string;
   }>;
   offers: Array<{
     id: string;
-    ctc_lpa: number;
-    joining_date: string | null;
+    application_id: string;
+    salary: number | null;
     status: string;
+    joining_date: string | null;
+    created_at: string;
   }>;
 }
 
+export interface LiveStudentOpportunity {
+  id: string;
+  company_id: string | null;
+  title: string;
+  job_type: string;
+  location: string;
+  description: string;
+  minimum_cgpa: number | null;
+  required_skills: string | null;
+  deadline: string | null;
+  created_at: string;
+  company: { id: string; name: string } | null;
+}
+
+export const myProfileQuery = queryOptions({
+  queryKey: ["my-live-profile"],
+  queryFn: async () => {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) throw new Error("Please sign in to continue.");
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("id,full_name,email,role,branch,graduation_year")
+      .eq("id", userData.user.id)
+      .maybeSingle();
+    if (error) throw new Error(`Could not load your profile: ${error.message}`);
+    if (!data || data.role !== "student") {
+      throw new Error("A student profile is not available for this account.");
+    }
+    return data;
+  },
+});
+
+export const liveStudentOpportunitiesQuery = queryOptions({
+  queryKey: ["live-student-opportunities"],
+  queryFn: async (): Promise<LiveStudentOpportunity[]> => {
+    const { error: userError, data: userData } = await supabase.auth.getUser();
+    if (userError || !userData.user) throw new Error("Please sign in to view opportunities.");
+
+    const { data: opportunities, error } = await supabase
+      .from("opportunities")
+      .select(
+        "id,company_id,title,job_type,location,description,minimum_cgpa,required_skills,deadline,created_at",
+      )
+      .order("created_at", { ascending: false });
+    if (error) throw new Error(`Could not load live opportunities: ${error.message}`);
+
+    const companyIds = [
+      ...new Set(
+        (opportunities ?? [])
+          .map((item) => item.company_id)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const { data: companies, error: companiesError } = companyIds.length
+      ? await supabase.from("company_directory").select("id,name").in("id", companyIds)
+      : { data: [], error: null };
+    if (companiesError)
+      throw new Error(`Could not load opportunity companies: ${companiesError.message}`);
+
+    const companiesById = new Map((companies ?? []).map((company) => [company.id, company]));
+    return (opportunities ?? []).map((opportunity) => ({
+      ...opportunity,
+      title: opportunity.title ?? "Untitled opportunity",
+      job_type: opportunity.job_type ?? "Type not specified",
+      location: opportunity.location ?? "Location not specified",
+      description: opportunity.description ?? "",
+      company:
+        opportunity.company_id === null
+          ? null
+          : (companiesById.get(opportunity.company_id) ?? null),
+    }));
+  },
+});
+
 export const myApplicationsQuery = queryOptions({
   queryKey: ["my-applications"],
-  queryFn: async (): Promise<MockApplication[]> => withSupabaseFallback(async () => {
-    const { data, error } = await supabase
+  queryFn: async (): Promise<StudentApplication[]> => {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      throw new Error("Please sign in to view your applications.");
+    }
+
+    const { data: applications, error } = await supabase
       .from("applications")
-      .select("*, job:jobs(id,title,ctc_lpa,location, company:companies(name)), interviews(*), offers(*)")
+      .select("id,profile_id,opportunity_id,status,applied_at,resume_url")
+      .eq("profile_id", userData.user.id);
+
+    if (error) {
+      throw new Error(`Failed to load applications from Supabase: ${error.message}`);
+    }
+
+    const applicationRows = applications ?? [];
+    if (!applicationRows.length) return [];
+
+    const opportunityIds = [
+      ...new Set(
+        applicationRows
+          .map((application) => application.opportunity_id)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const applicationIds = applicationRows.map((application) => application.id);
+    const [opportunitiesResult, interviewsResult, offersResult] = await Promise.all([
+      supabase
+        .from("opportunities")
+        .select("id,title,location,company_id")
+        .in("id", opportunityIds),
+      supabase
+        .from("interviews")
+        .select("id,application_id,scheduled_at,interview_type,meeting_link,feedback,status")
+        .in("application_id", applicationIds),
+      supabase
+        .from("offers")
+        .select("id,application_id,salary,status,joining_date,created_at")
+        .in("application_id", applicationIds),
+    ]);
+
+    if (opportunitiesResult.error) {
+      throw new Error(`Failed to load applied opportunities: ${opportunitiesResult.error.message}`);
+    }
+    if (interviewsResult.error) {
+      throw new Error(`Failed to load application interviews: ${interviewsResult.error.message}`);
+    }
+    if (offersResult.error) {
+      throw new Error(`Failed to load application offers: ${offersResult.error.message}`);
+    }
+
+    const companyIds = [
+      ...new Set(
+        (opportunitiesResult.data ?? [])
+          .map((item) => item.company_id)
+          .filter((id): id is string => id !== null),
+      ),
+    ];
+    const companiesResult = companyIds.length
+      ? await supabase.from("company_directory").select("id,name").in("id", companyIds)
+      : { data: [], error: null };
+    if (companiesResult.error) {
+      throw new Error(`Failed to load application companies: ${companiesResult.error.message}`);
+    }
+
+    const companiesById = new Map(
+      (companiesResult.data ?? []).map((company) => [company.id, company]),
+    );
+    const opportunitiesById = new Map(
+      (opportunitiesResult.data ?? []).map((opportunity) => [
+        opportunity.id,
+        {
+          id: opportunity.id,
+          title: opportunity.title ?? "Untitled opportunity",
+          location: opportunity.location ?? "Location not specified",
+          company:
+            opportunity.company_id === null
+              ? null
+              : (companiesById.get(opportunity.company_id) ?? null),
+        },
+      ]),
+    );
+    const interviewsByApplication = new Map<string, StudentApplication["interviews"]>();
+    for (const interview of interviewsResult.data ?? []) {
+      if (!interview.application_id) continue;
+      const current = interviewsByApplication.get(interview.application_id) ?? [];
+      current.push({
+        ...interview,
+        application_id: interview.application_id,
+        interview_type: interview.interview_type ?? "Interview",
+        status: interview.status ?? "scheduled",
+      });
+      interviewsByApplication.set(interview.application_id, current);
+    }
+    const offersByApplication = new Map<string, StudentApplication["offers"]>();
+    for (const offer of offersResult.data ?? []) {
+      if (!offer.application_id) continue;
+      const current = offersByApplication.get(offer.application_id) ?? [];
+      current.push({
+        ...offer,
+        application_id: offer.application_id,
+        status: offer.status ?? "pending",
+      });
+      offersByApplication.set(offer.application_id, current);
+    }
+
+    return applicationRows.map((application) => ({
+      ...application,
+      profile_id: application.profile_id ?? userData.user.id,
+      status: application.status ?? "applied",
+      job: application.opportunity_id
+        ? (opportunitiesById.get(application.opportunity_id) ?? null)
+        : null,
+      interviews: interviewsByApplication.get(application.id) ?? [],
+      offers: offersByApplication.get(application.id) ?? [],
+    }));
+  },
+});
+
+export const myNotificationsQuery = queryOptions({
+  queryKey: ["student-notifications"],
+  queryFn: async () => {
+    const { data: userData, error: userError } = await supabase.auth.getUser();
+    if (userError || !userData.user) {
+      throw new Error("Please sign in to view your notifications.");
+    }
+
+    const { data, error } = await supabase
+      .from("notifications")
+      .select("id,profile_id,title,message,is_read,created_at")
+      .eq("profile_id", userData.user.id)
       .order("created_at", { ascending: false });
-    if (error || !data || data.length === 0) throw error || new Error("No apps");
-    return data as unknown as MockApplication[];
-  }, getMockApplications()),
+
+    if (error) {
+      throw new Error(`Failed to load notifications from Supabase: ${error.message}`);
+    }
+
+    return data ?? [];
+  },
 });

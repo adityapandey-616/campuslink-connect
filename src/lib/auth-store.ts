@@ -1,5 +1,6 @@
 export type { Role } from "./campus";
-import type { Role } from "./campus";
+import { portalPathForRole, type Role } from "./campus";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface UserSession {
   id: string;
@@ -12,56 +13,55 @@ export interface UserSession {
   loggedInAt: string;
 }
 
-export interface DemoAccount {
-  role: Role;
-  label: string;
-  email: string;
-  name: string;
-  passwordHint: string;
-  passwordHash: string; // Plain mock password kept only in the frontend demo store
-  roll_no?: string;
-  company_name?: string;
-  description: string;
-}
-
-export const DEMO_ACCOUNTS: Record<Role, DemoAccount> = {
-  student: {
-    role: "student",
-    label: "Undergraduate Student",
-    email: "student@campuslink.edu",
-    name: "Aarav Mehta",
-    passwordHint: "student123",
-    passwordHash: "student123",
-    roll_no: "21CS001",
-    description: "4th Year B.Tech CSE · Placement Candidate",
-  },
-  recruiter: {
-    role: "recruiter",
-    label: "Corporate Recruiter",
-    email: "recruiter@novatek.com",
-    name: "Priya Sundaram",
-    passwordHint: "recruiter123",
-    passwordHash: "recruiter123",
-    company_name: "Novatek Systems",
-    description: "Lead Technical Recruiter · Novatek Systems",
-  },
-  admin: {
-    role: "admin",
-    label: "Placement Cell Admin",
-    email: "admin@campuslink.edu",
-    name: "Dr. Arvind Chawla",
-    passwordHint: "admin123",
-    passwordHash: "admin123",
-    description: "Head, Training & Placement Cell · TPO Officer",
-  },
-};
-
 const SESSION_KEY = "campuslink_user_session";
 const ACTIVE_ROLE_KEY = "campuslink_active_role";
+const DEMO_PREVIEW_ROLE_KEY = "campuslink_demo_preview_role";
 let inMemorySession: UserSession | null | undefined = undefined;
 
-function isValidRole(role: unknown): role is Role {
-  return role === "student" || role === "recruiter" || role === "admin";
+export type DemoPreviewRole = "student" | "recruiter";
+
+function isPlacementStaffRole(role: Role): boolean {
+  return role === "admin" || role === "placement_admin";
+}
+
+export function getDemoPreviewRole(): DemoPreviewRole | null {
+  const session = getSession();
+  if (!session || !isPlacementStaffRole(session.role) || typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const role = window.localStorage.getItem(DEMO_PREVIEW_ROLE_KEY);
+    return role === "student" || role === "recruiter" ? role : null;
+  } catch (error) {
+    console.warn("[Auth] Could not read the demo preview mode:", error);
+    return null;
+  }
+}
+
+export function setDemoPreviewRole(role: DemoPreviewRole | null): boolean {
+  const session = getSession();
+  if (!session || !isPlacementStaffRole(session.role) || typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    if (role) {
+      window.localStorage.setItem(DEMO_PREVIEW_ROLE_KEY, role);
+    } else {
+      window.localStorage.removeItem(DEMO_PREVIEW_ROLE_KEY);
+    }
+    return true;
+  } catch (error) {
+    console.warn("[Auth] Could not update the demo preview mode:", error);
+    return false;
+  }
+}
+
+export function isValidRole(role: unknown): role is Role {
+  return (
+    role === "student" || role === "recruiter" || role === "admin" || role === "placement_admin"
+  );
 }
 
 function isWellFormedSession(value: unknown): value is UserSession {
@@ -73,9 +73,49 @@ function isWellFormedSession(value: unknown): value is UserSession {
     typeof candidate.name === "string" &&
     isValidRole(candidate.role) &&
     typeof candidate.token === "string" &&
-    typeof candidate.loggedInAt === "string" &&
-    Object.prototype.hasOwnProperty.call(DEMO_ACCOUNTS, candidate.role)
+    candidate.token.length > 0 &&
+    !candidate.token.startsWith("demo-token-") &&
+    typeof candidate.loggedInAt === "string"
   );
+}
+
+function setLocalSession(session: UserSession | null): void {
+  inMemorySession = session;
+  if (typeof window === "undefined") return;
+
+  try {
+    if (session) {
+      window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      window.localStorage.setItem(ACTIVE_ROLE_KEY, session.role);
+    } else {
+      window.localStorage.removeItem(SESSION_KEY);
+      window.localStorage.removeItem(ACTIVE_ROLE_KEY);
+    }
+  } catch (error) {
+    console.warn("[Auth] Could not update the local session cache:", error);
+  }
+}
+
+export function clearSession(): void {
+  setLocalSession(null);
+  if (typeof window !== "undefined") {
+    try {
+      window.localStorage.removeItem(DEMO_PREVIEW_ROLE_KEY);
+    } catch (error) {
+      console.warn("[Auth] Could not clear the demo preview mode:", error);
+    }
+  }
+}
+
+async function clearSupabaseSession(): Promise<void> {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) console.warn("[Auth] Could not clear the Supabase session:", error.message);
+  } catch (error) {
+    console.warn("[Auth] Could not clear the Supabase session:", error);
+  } finally {
+    clearSession();
+  }
 }
 
 export function getSession(): UserSession | null {
@@ -90,24 +130,13 @@ export function getSession(): UserSession | null {
     }
     const parsed = JSON.parse(raw) as unknown;
     if (!isWellFormedSession(parsed)) {
-      window.localStorage.removeItem(SESSION_KEY);
-      window.localStorage.removeItem(ACTIVE_ROLE_KEY);
-      inMemorySession = null;
-      return null;
-    }
-    const account = DEMO_ACCOUNTS[parsed.role];
-    if (account.email.toLowerCase() !== parsed.email.toLowerCase()) {
-      window.localStorage.removeItem(SESSION_KEY);
-      window.localStorage.removeItem(ACTIVE_ROLE_KEY);
-      inMemorySession = null;
+      clearSession();
       return null;
     }
     inMemorySession = parsed;
     return parsed;
   } catch {
-    window.localStorage.removeItem(SESSION_KEY);
-    window.localStorage.removeItem(ACTIVE_ROLE_KEY);
-    inMemorySession = null;
+    clearSession();
     return null;
   }
 }
@@ -121,18 +150,139 @@ export function getCurrentRole(): Role | null {
   return session ? session.role : null;
 }
 
+/**
+ * Transforms technical or raw Supabase errors into clear diagnostic messages.
+ */
+export function formatAuthErrorMessage(err: unknown): string {
+  if (!err) return "An unexpected authentication error occurred.";
+  const msg = typeof err === "string" ? err : err instanceof Error ? err.message : String(err);
+
+  if (
+    msg.includes("Failed to fetch") ||
+    msg.includes("NetworkError") ||
+    msg.includes("Load failed") ||
+    msg.includes("fetch failed")
+  ) {
+    return "Cannot reach the Supabase authentication server. Please check your network connection or verify that VITE_SUPABASE_URL is properly configured.";
+  }
+  if (msg.includes("Invalid login credentials")) {
+    return "Invalid email or password. Please verify your Supabase account credentials.";
+  }
+  if (msg.includes("Email rate limit exceeded") || msg.includes("rate limit")) {
+    return "Supabase email rate limit exceeded. Please wait a few minutes before trying again.";
+  }
+  if (msg.includes("Email address") && msg.includes("is invalid")) {
+    return "Please enter a valid, deliverable email address (e.g. yourname@gmail.com).";
+  }
+  if (msg.includes("User already registered")) {
+    return "An account with this email address already exists. Please sign in instead.";
+  }
+  if (msg.includes("Email not confirmed")) {
+    return "Your email address has not been confirmed yet. Please check your inbox for the verification link.";
+  }
+  if (msg.includes("Password should be at least")) {
+    return "Password must be at least 6 characters long.";
+  }
+  if (
+    msg.includes("provider is not enabled") ||
+    msg.includes("Unsupported provider") ||
+    msg.includes("OAuth provider")
+  ) {
+    return "Google provider is not enabled in your Supabase project. Please enable Google under Authentication > Providers in the Supabase Dashboard.";
+  }
+  return msg;
+}
+
+/**
+ * Resolves the assigned role and display name from the live profiles row.
+ */
+export async function fetchProfileRole(
+  userId: string,
+  preferredRole?: Role,
+): Promise<{ role: Role; name: string } | null> {
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("role, full_name, email")
+    .eq("id", userId)
+    .maybeSingle();
+  if (profileError) {
+    throw new Error(`Failed to load your profile: ${profileError.message}`);
+  }
+
+  const assignedRole = profile?.role;
+  if (!isValidRole(assignedRole)) {
+    return null;
+  }
+
+  const role = preferredRole === assignedRole ? preferredRole : assignedRole;
+  return { role, name: profile?.full_name ?? "" };
+}
+
+/**
+ * Restores session after page refresh or browser restart.
+ * Syncs the local cache with the active Supabase token and loads the profile role.
+ */
+export async function restoreSession(): Promise<UserSession | null> {
+  if (typeof window === "undefined") return null;
+
+  try {
+    const { data, error } = await supabase.auth.getSession();
+    if (error) {
+      throw new Error(`Failed to restore the Supabase session: ${error.message}`);
+    }
+    if (!data.session) {
+      clearSession();
+      return null;
+    }
+
+    const sbUser = data.session.user;
+    const profile = await fetchProfileRole(sbUser.id);
+    if (!profile) {
+      console.warn("[Auth] Signed-in user has no assigned placement portal role.");
+      await clearSupabaseSession();
+      return null;
+    }
+
+    const name: string =
+      profile?.name ||
+      (sbUser.user_metadata?.["full_name"] as string | undefined) ||
+      (sbUser.user_metadata?.["name"] as string | undefined) ||
+      sbUser.email?.split("@")[0] ||
+      "User";
+
+    const session: UserSession = {
+      id: sbUser.id,
+      email: sbUser.email ?? "",
+      name,
+      role: profile.role,
+      token: data.session.access_token,
+      loggedInAt: new Date().toISOString(),
+    };
+
+    setLocalSession(session);
+    return session;
+  } catch (err) {
+    console.error("[Auth] Session restoration error:", err);
+    clearSession();
+    return null;
+  }
+}
+
 export interface LoginResult {
   success: boolean;
   session?: UserSession | undefined;
   error?: string | undefined;
 }
 
-export function loginWithCredentials(
+/**
+ * Authenticates against Supabase and requires a role assigned in profiles.
+ */
+export async function loginWithSupabase(
   emailInput: string,
   passwordInput: string,
-  preferredRole?: Role
-): LoginResult {
-  const email = emailInput.trim().toLowerCase();
+  preferredRole?: Role,
+): Promise<LoginResult> {
+  const email = emailInput.trim();
   const password = passwordInput.trim();
 
   if (!email) {
@@ -142,91 +292,194 @@ export function loginWithCredentials(
     return { success: false, error: "Please enter your account password." };
   }
 
-  // Find the account for the requested role first. A different role cannot be
-  // silently selected by entering another account's email or shorthand.
-  let matchedAccount: DemoAccount | undefined;
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-  if (preferredRole && DEMO_ACCOUNTS[preferredRole]) {
-    const acc = DEMO_ACCOUNTS[preferredRole];
-    const emailMatchesRole =
-      email === acc.email.toLowerCase() ||
-      email === acc.role ||
-      email === acc.name.toLowerCase().replace(/\s+/g, ".") ||
-      email.startsWith(`${acc.role}@`);
-
-    if (emailMatchesRole) {
-      matchedAccount = acc;
+    if (error) {
+      return { success: false, error: formatAuthErrorMessage(error) };
     }
-  }
 
-  if (!matchedAccount) {
-    const exactMatch = Object.values(DEMO_ACCOUNTS).find(
-      (acc) =>
-        acc.email.toLowerCase() === email ||
-        email === acc.role ||
-        email.startsWith(`${acc.role}@`)
-    );
+    if (!data.user || !data.session) {
+      return { success: false, error: "Authentication did not produce an active session." };
+    }
 
-    if (exactMatch) {
+    const profile = await fetchProfileRole(data.user.id, preferredRole);
+    if (!profile) {
+      await clearSupabaseSession();
       return {
         success: false,
-        error: `This account belongs to ${exactMatch.label}. Select ${exactMatch.role} and retry.`,
+        error: "Your account has no assigned placement role. Contact the placement administrator.",
       };
     }
 
+    const name: string =
+      profile?.name ||
+      (data.user.user_metadata?.["full_name"] as string | undefined) ||
+      (data.user.user_metadata?.["name"] as string | undefined) ||
+      data.user.email?.split("@")[0] ||
+      "User";
+
+    const session: UserSession = {
+      id: data.user.id,
+      email: data.user.email ?? email,
+      name,
+      role: profile.role,
+      token: data.session.access_token,
+      loggedInAt: new Date().toISOString(),
+    };
+
+    setLocalSession(session);
+    return { success: true, session };
+  } catch (err: unknown) {
+    await clearSupabaseSession();
+    return { success: false, error: formatAuthErrorMessage(err) };
+  }
+}
+
+/**
+ * Registers a new student account with Supabase email/password.
+ */
+export async function signupWithSupabase(
+  emailInput: string,
+  passwordInput: string,
+  role: Role,
+  fullNameInput: string,
+): Promise<LoginResult & { confirmationRequired?: boolean }> {
+  // Recruiter and Admin roles must be provisioned by an authorized administrator.
+  if (role !== "student") {
     return {
       success: false,
-      error: "No account found matching this email. Use one of the demo credentials.",
+      error:
+        "Recruiter and Admin accounts cannot be self-registered. Contact the placement administrator.",
     };
   }
 
-  // Validate password only against the matching account.
-  if (password !== matchedAccount.passwordHash) {
-    return {
-      success: false,
-      error: `Incorrect password. Hint for ${matchedAccount.label}: "${matchedAccount.passwordHint}"`,
+  const email = emailInput.trim();
+  const password = passwordInput.trim();
+  const fullName = fullNameInput.trim();
+
+  if (!email) {
+    return { success: false, error: "Please enter your email address." };
+  }
+  if (!password || password.length < 6) {
+    return { success: false, error: "Password must be at least 6 characters." };
+  }
+  if (!fullName) {
+    return { success: false, error: "Please enter your full name." };
+  }
+
+  try {
+    const signUpOptions: { data: { full_name: string; role: Role }; emailRedirectTo?: string } = {
+      data: {
+        full_name: fullName,
+        role,
+      },
     };
+    if (typeof window !== "undefined" && window.location?.origin) {
+      signUpOptions.emailRedirectTo = window.location.origin;
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: signUpOptions,
+    });
+
+    if (error) {
+      return { success: false, error: formatAuthErrorMessage(error) };
+    }
+
+    if (!data.user) {
+      return { success: false, error: "Registration failed. No user was created." };
+    }
+
+    // If an active session was created immediately (e.g. email confirmation disabled)
+    if (data.session) {
+      const profile = await fetchProfileRole(data.user.id, role);
+      if (!profile || profile.role !== role) {
+        await clearSupabaseSession();
+        return {
+          success: false,
+          error:
+            "Your account was created, but no placement role was assigned. Contact the placement administrator.",
+        };
+      }
+
+      const session: UserSession = {
+        id: data.user.id,
+        email,
+        name: profile.name || fullName,
+        role: profile.role,
+        token: data.session.access_token,
+        loggedInAt: new Date().toISOString(),
+      };
+      setLocalSession(session);
+      return { success: true, session };
+    } else {
+      // Email confirmation is required by Supabase Auth settings
+      return {
+        success: true,
+        confirmationRequired: true,
+        error:
+          "Account created successfully! A confirmation link has been sent to your email. Please verify your address to sign in.",
+      };
+    }
+  } catch (err: unknown) {
+    await clearSupabaseSession();
+    return { success: false, error: formatAuthErrorMessage(err) };
   }
+}
 
-  // Create valid session
-  const session: UserSession = {
-    id: `usr-${matchedAccount.role}-${Date.now()}`,
-    email: matchedAccount.email,
-    name: matchedAccount.name,
-    role: matchedAccount.role,
-    roll_no: matchedAccount.roll_no,
-    company_name: matchedAccount.company_name,
-    token: `demo-token-${matchedAccount.role}-${Math.random().toString(36).substring(2)}`,
-    loggedInAt: new Date().toISOString(),
-  };
+/**
+ * Compatible bridge for legacy callers of loginWithCredentials.
+ */
+export async function loginWithCredentials(
+  emailInput: string,
+  passwordInput: string,
+  preferredRole?: Role,
+): Promise<LoginResult> {
+  return loginWithSupabase(emailInput, passwordInput, preferredRole);
+}
 
-  inMemorySession = session;
-  if (typeof window !== "undefined") {
-    try {
-      window.localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-      window.localStorage.setItem(ACTIVE_ROLE_KEY, session.role);
-    } catch {}
+/**
+ * Signs out from Supabase and clears local session cache.
+ */
+export async function logoutUser(): Promise<void> {
+  try {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.warn("[Auth] Sign out error:", error.message);
+    }
+  } catch (err) {
+    console.warn("[Auth] Sign out error:", err);
   }
-
-  return { success: true, session };
+  clearSession();
 }
 
 export function logout(): void {
-  inMemorySession = null;
-  if (typeof window !== "undefined") {
-    try {
-      window.localStorage.removeItem(SESSION_KEY);
-      window.localStorage.removeItem(ACTIVE_ROLE_KEY);
-    } catch {}
-  }
+  clearSession();
+  supabase.auth
+    .signOut()
+    .then(({ error }) => {
+      if (error) console.warn("[Auth] Sign out error:", error.message);
+    })
+    .catch((error: unknown) => {
+      console.warn("[Auth] Sign out error:", error);
+    });
 }
 
 /**
  * Access control checks for route authorization.
  */
-export function isAuthorizedForPath(session: UserSession | null, pathname: string): {
+export function isAuthorizedForPath(
+  session: UserSession | null,
+  pathname: string,
+): {
   authorized: boolean;
-  redirectTo?: string | undefined;
+  redirectTo?: "/auth" | "/admin" | "/recruiter" | "/student" | undefined;
   reason?: string | undefined;
 } {
   if (!session) {
@@ -237,37 +490,42 @@ export function isAuthorizedForPath(session: UserSession | null, pathname: strin
     };
   }
 
-  // Clean pathname
-  const path = pathname.toLowerCase();
+  const path = pathname.toLowerCase().replace(/\/+$/, "") || "/";
 
-  // Admin routes: ONLY accessible by "admin" role
+  const isPlacementStaff = isPlacementStaffRole(session.role);
+
+  // Both operational admin roles use the placement administration routes.
   if (path.startsWith("/admin")) {
-    if (session.role !== "admin") {
+    if (!isPlacementStaff) {
       return {
         authorized: false,
-        redirectTo: session.role === "recruiter" ? "/recruiter" : "/student",
+        redirectTo: portalPathForRole(session.role),
         reason: "Access denied. Placement Admin privileges required.",
       };
     }
   }
 
-  // Recruiter routes: accessible by "recruiter" (or admin inspecting)
+  // Recruiter routes are available to recruiters and placement staff.
   if (path.startsWith("/recruiter")) {
-    if (session.role === "student") {
+    const isRecruiterPreview =
+      isPlacementStaff && getDemoPreviewRole() === "recruiter" && path === "/recruiter/dashboard";
+    if (session.role !== "recruiter" && !isRecruiterPreview) {
       return {
         authorized: false,
-        redirectTo: "/student",
+        redirectTo: portalPathForRole(session.role),
         reason: "Access denied. Recruiter credentials required.",
       };
     }
   }
 
-  // Student routes: accessible by "student" (or admin inspecting)
+  // Student routes are available to students and placement staff.
   if (path.startsWith("/student")) {
-    if (session.role === "recruiter") {
+    const isStudentPreview =
+      isPlacementStaff && getDemoPreviewRole() === "student" && path === "/student";
+    if (session.role !== "student" && !isStudentPreview) {
       return {
         authorized: false,
-        redirectTo: "/recruiter",
+        redirectTo: portalPathForRole(session.role),
         reason: "Access denied. Student portal is restricted to enrolled candidates.",
       };
     }

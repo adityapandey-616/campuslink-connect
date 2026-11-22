@@ -62,7 +62,8 @@ export interface MockOffer {
   status: string;
 }
 
-export type MockApplicationStatus = "applied" | "shortlisted" | "interview" | "offered" | "rejected" | "joined";
+export type MockApplicationStatus =
+  "applied" | "shortlisted" | "interview" | "offered" | "rejected" | "joined";
 
 export interface MockApplication {
   id: string;
@@ -103,7 +104,7 @@ export interface MockJob {
   company: MockCompany;
   skills: { id: string; name: string }[];
   job_skills: { skill: { id: string; name: string } | null }[];
-  applications: any[];
+  applications: MockApplication[];
 }
 
 export interface MockDrive {
@@ -138,12 +139,54 @@ export interface MockNotification {
 // ----------------------------------------------------
 
 export const COMPANIES_BY_ID: Record<string, MockCompany> = {
-  c1: { id: "c1", name: "Novatek Systems", industry: "Enterprise Software", location: "Bengaluru", website: "https://novatek.example.com", description: "Builds ERP and workflow platforms for mid-market manufacturers." },
-  c2: { id: "c2", name: "Quantiva Analytics", industry: "Data & AI", location: "Hyderabad", website: "https://quantiva.example.com", description: "Analytics consultancy delivering ML solutions for retail and fintech." },
-  c3: { id: "c3", name: "Orbitrail Mobility", industry: "Automotive Tech", location: "Pune", website: "https://orbitrail.example.com", description: "Connected-vehicle and embedded firmware for EV makers." },
-  c4: { id: "c4", name: "Finloop Payments", industry: "Fintech", location: "Mumbai", website: "https://finloop.example.com", description: "UPI and card payments infrastructure for merchants." },
-  c5: { id: "c5", name: "Cloudnest Labs", industry: "Cloud Infrastructure", location: "Noida", website: "https://cloudnest.example.com", description: "Managed Kubernetes and DevOps tooling." },
-  c6: { id: "c6", name: "Medisphere Health", industry: "HealthTech", location: "Chennai", website: "https://medisphere.example.com", description: "Hospital information systems and telehealth." },
+  c1: {
+    id: "c1",
+    name: "Novatek Systems",
+    industry: "Enterprise Software",
+    location: "Bengaluru",
+    website: "https://novatek.example.com",
+    description: "Builds ERP and workflow platforms for mid-market manufacturers.",
+  },
+  c2: {
+    id: "c2",
+    name: "Quantiva Analytics",
+    industry: "Data & AI",
+    location: "Hyderabad",
+    website: "https://quantiva.example.com",
+    description: "Analytics consultancy delivering ML solutions for retail and fintech.",
+  },
+  c3: {
+    id: "c3",
+    name: "Orbitrail Mobility",
+    industry: "Automotive Tech",
+    location: "Pune",
+    website: "https://orbitrail.example.com",
+    description: "Connected-vehicle and embedded firmware for EV makers.",
+  },
+  c4: {
+    id: "c4",
+    name: "Finloop Payments",
+    industry: "Fintech",
+    location: "Mumbai",
+    website: "https://finloop.example.com",
+    description: "UPI and card payments infrastructure for merchants.",
+  },
+  c5: {
+    id: "c5",
+    name: "Cloudnest Labs",
+    industry: "Cloud Infrastructure",
+    location: "Noida",
+    website: "https://cloudnest.example.com",
+    description: "Managed Kubernetes and DevOps tooling.",
+  },
+  c6: {
+    id: "c6",
+    name: "Medisphere Health",
+    industry: "HealthTech",
+    location: "Chennai",
+    website: "https://medisphere.example.com",
+    description: "Hospital information systems and telehealth.",
+  },
 };
 
 export const MOCK_COMPANIES: MockCompany[] = Object.values(COMPANIES_BY_ID);
@@ -182,8 +225,7 @@ export const getCompanyById = (id: string): MockCompany =>
 export const getSkillById = (id: string): MockSkill =>
   SKILLS_BY_ID[id] ?? { id, name: id, category: "Technical" };
 
-export const getSkillsByIds = (ids: string[]): MockSkill[] =>
-  ids.map(getSkillById);
+export const getSkillsByIds = (ids: string[]): MockSkill[] => ids.map(getSkillById);
 
 export const SEED_JOBS: MockJob[] = [
   {
@@ -352,11 +394,12 @@ export const MOCK_JOBS: MockJob[] = SEED_JOBS;
 
 // Lookup map for O(1) job access without noUncheckedIndexedAccess issues
 export const JOBS_BY_ID: Record<string, MockJob> = Object.fromEntries(
-  SEED_JOBS.map((j) => [j.id, j])
+  SEED_JOBS.map((j) => [j.id, j]),
 );
 
 export const getJobById = (id: string): MockJob =>
-  JOBS_BY_ID[id] ?? SEED_JOBS[0] ?? {
+  JOBS_BY_ID[id] ??
+  SEED_JOBS[0] ?? {
     id,
     company_id: "c1",
     title: "Position",
@@ -416,7 +459,8 @@ export const SEED_PROJECTS: MockProject[] = [
     id: "p1",
     student_id: "s1",
     title: "Distributed Rate Limiter",
-    description: "High-performance sliding-window rate limiter built with Node.js and Redis cluster, handling 15,000 req/sec.",
+    description:
+      "High-performance sliding-window rate limiter built with Node.js and Redis cluster, handling 15,000 req/sec.",
     tech: "Node.js, Redis, Docker, TypeScript",
     created_at: new Date(Date.now() - 30 * 86400000).toISOString(),
   },
@@ -424,7 +468,8 @@ export const SEED_PROJECTS: MockProject[] = [
     id: "p2",
     student_id: "s1",
     title: "Campus Placement Portal",
-    description: "End-to-end recruitment tracker with AI candidate matching and verified document repository.",
+    description:
+      "End-to-end recruitment tracker with AI candidate matching and verified document repository.",
     tech: "React, Tailwind, PostgreSQL, TanStack Router",
     created_at: new Date(Date.now() - 60 * 86400000).toISOString(),
   },
@@ -454,8 +499,22 @@ export const SEED_CERTS: MockCert[] = [
 export const MOCK_CERTS = SEED_CERTS;
 
 export const SEED_DOCUMENTS: MockDoc[] = [
-  { id: "d1", student_id: "s1", doc_type: "Resume", status: "verified", note: "Verified by placement office", created_at: new Date().toISOString() },
-  { id: "d2", student_id: "s1", doc_type: "Semester Marksheets", status: "verified", note: null, created_at: new Date().toISOString() },
+  {
+    id: "d1",
+    student_id: "s1",
+    doc_type: "Resume",
+    status: "verified",
+    note: "Verified by placement office",
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "d2",
+    student_id: "s1",
+    doc_type: "Semester Marksheets",
+    status: "verified",
+    note: null,
+    created_at: new Date().toISOString(),
+  },
 ];
 
 export const MOCK_DOCUMENTS = SEED_DOCUMENTS;
@@ -551,16 +610,207 @@ export interface MockCandidate {
 }
 
 export const MOCK_ALL_STUDENTS: MockCandidate[] = [
-  { id: "s1", full_name: "Aarav Mehta", email: "aarav.m@demo.campus", roll_no: "21CS001", branch: "CSE", batch_year: 2025, cgpa: 8.7, backlogs: 0, placement_status: "shortlisted", student_skills: [{ skill_id: "sk5" }, { skill_id: "sk6" }, { skill_id: "sk7" }, { skill_id: "sk8" }, { skill_id: "sk11" }], projects: [{ id: "p1", title: "Distributed Rate Limiter", description: "High-performance sliding-window rate limiter built with Node.js and Redis.", tech: "Node.js, Redis, Docker, TypeScript" }, { id: "p2", title: "Campus Placement Portal", description: "End-to-end recruitment tracker with AI candidate matching.", tech: "React, Tailwind, PostgreSQL, TanStack Router" }], certifications: [{ id: "c1", name: "AWS Certified Cloud Practitioner", issuer: "Amazon Web Services" }], documents: [{ status: "verified" }, { status: "verified" }], applications: [{ id: "app1" }, { id: "app2" }], phone: "+91 98765 43210", bio: "Backend-focused computer science undergrad, passionate about distributed systems and cloud microservices.", tenth_pct: 92, twelfth_pct: 90 },
-  { id: "s2", full_name: "Diya Sharma", email: "diya.s@demo.campus", roll_no: "21CS002", branch: "CSE", batch_year: 2025, cgpa: 9.1, backlogs: 0, placement_status: "placed", student_skills: [{ skill_id: "sk1" }, { skill_id: "sk10" }, { skill_id: "sk7" }, { skill_id: "sk8" }, { skill_id: "sk9" }], projects: [{ id: "p3" }], certifications: [{ id: "c2" }], documents: [{ status: "verified" }], applications: [{ id: "app4" }] },
-  { id: "s3", full_name: "Kabir Nair", email: "kabir.n@demo.campus", roll_no: "21IT003", branch: "IT", batch_year: 2025, cgpa: 7.4, backlogs: 0, placement_status: "unplaced", student_skills: [{ skill_id: "sk4" }, { skill_id: "sk5" }, { skill_id: "sk13" }], projects: [{ id: "p4" }], certifications: [], documents: [{ status: "pending" }], applications: [{ id: "app5" }] },
-  { id: "s4", full_name: "Ishita Rao", email: "ishita.r@demo.campus", roll_no: "21EC004", branch: "ECE", batch_year: 2025, cgpa: 8.2, backlogs: 0, placement_status: "placed", student_skills: [{ skill_id: "sk14" }, { skill_id: "sk3" }, { skill_id: "sk9" }], projects: [{ id: "p5" }], certifications: [{ id: "c3" }], documents: [{ status: "verified" }], applications: [{ id: "app6" }] },
-  { id: "s5", full_name: "Vivaan Gupta", email: "vivaan.g@demo.campus", roll_no: "21CS005", branch: "CSE", batch_year: 2025, cgpa: 6.4, backlogs: 2, placement_status: "unplaced", student_skills: [{ skill_id: "sk11" }], projects: [], certifications: [], documents: [{ status: "pending" }], applications: [] },
-  { id: "s6", full_name: "Ananya Iyer", email: "ananya.i@demo.campus", roll_no: "21IT006", branch: "IT", batch_year: 2025, cgpa: 8.9, backlogs: 0, placement_status: "placed", student_skills: [{ skill_id: "sk4" }, { skill_id: "sk5" }, { skill_id: "sk6" }, { skill_id: "sk7" }], projects: [{ id: "p6" }, { id: "p7" }], certifications: [{ id: "c4" }], documents: [{ status: "verified" }], applications: [{ id: "app7" }] },
-  { id: "s7", full_name: "Rohan Das", email: "rohan.d@demo.campus", roll_no: "21ME007", branch: "ME", batch_year: 2025, cgpa: 7.1, backlogs: 1, placement_status: "unplaced", student_skills: [{ skill_id: "sk1" }, { skill_id: "sk15" }], projects: [{ id: "p8" }], certifications: [], documents: [{ status: "verified" }], applications: [{ id: "app8" }] },
-  { id: "s8", full_name: "Saanvi Joshi", email: "saanvi.j@demo.campus", roll_no: "21CS008", branch: "CSE", batch_year: 2025, cgpa: 8.0, backlogs: 0, placement_status: "shortlisted", student_skills: [{ skill_id: "sk8" }, { skill_id: "sk9" }, { skill_id: "sk2" }, { skill_id: "sk7" }], projects: [{ id: "p9" }], certifications: [{ id: "c5" }], documents: [{ status: "verified" }], applications: [{ id: "app9" }] },
-  { id: "s9", full_name: "Arjun Pillai", email: "arjun.p@demo.campus", roll_no: "21EE009", branch: "EE", batch_year: 2025, cgpa: 7.6, backlogs: 0, placement_status: "unplaced", student_skills: [{ skill_id: "sk14" }, { skill_id: "sk3" }], projects: [{ id: "p10" }], certifications: [], documents: [{ status: "verified" }], applications: [{ id: "app10" }] },
-  { id: "s10", full_name: "Aditya Verma", email: "aditya.v@demo.campus", roll_no: "21CS011", branch: "CSE", batch_year: 2025, cgpa: 5.9, backlogs: 3, placement_status: "unplaced", student_skills: [{ skill_id: "sk8" }], projects: [], certifications: [], documents: [{ status: "pending" }], applications: [] },
+  {
+    id: "s1",
+    full_name: "Aarav Mehta",
+    email: "aarav.m@demo.campus",
+    roll_no: "21CS001",
+    branch: "CSE",
+    batch_year: 2025,
+    cgpa: 8.7,
+    backlogs: 0,
+    placement_status: "shortlisted",
+    student_skills: [
+      { skill_id: "sk5" },
+      { skill_id: "sk6" },
+      { skill_id: "sk7" },
+      { skill_id: "sk8" },
+      { skill_id: "sk11" },
+    ],
+    projects: [
+      {
+        id: "p1",
+        title: "Distributed Rate Limiter",
+        description: "High-performance sliding-window rate limiter built with Node.js and Redis.",
+        tech: "Node.js, Redis, Docker, TypeScript",
+      },
+      {
+        id: "p2",
+        title: "Campus Placement Portal",
+        description: "End-to-end recruitment tracker with AI candidate matching.",
+        tech: "React, Tailwind, PostgreSQL, TanStack Router",
+      },
+    ],
+    certifications: [
+      { id: "c1", name: "AWS Certified Cloud Practitioner", issuer: "Amazon Web Services" },
+    ],
+    documents: [{ status: "verified" }, { status: "verified" }],
+    applications: [{ id: "app1" }, { id: "app2" }],
+    phone: "+91 98765 43210",
+    bio: "Backend-focused computer science undergrad, passionate about distributed systems and cloud microservices.",
+    tenth_pct: 92,
+    twelfth_pct: 90,
+  },
+  {
+    id: "s2",
+    full_name: "Diya Sharma",
+    email: "diya.s@demo.campus",
+    roll_no: "21CS002",
+    branch: "CSE",
+    batch_year: 2025,
+    cgpa: 9.1,
+    backlogs: 0,
+    placement_status: "placed",
+    student_skills: [
+      { skill_id: "sk1" },
+      { skill_id: "sk10" },
+      { skill_id: "sk7" },
+      { skill_id: "sk8" },
+      { skill_id: "sk9" },
+    ],
+    projects: [{ id: "p3" }],
+    certifications: [{ id: "c2" }],
+    documents: [{ status: "verified" }],
+    applications: [{ id: "app4" }],
+  },
+  {
+    id: "s3",
+    full_name: "Kabir Nair",
+    email: "kabir.n@demo.campus",
+    roll_no: "21IT003",
+    branch: "IT",
+    batch_year: 2025,
+    cgpa: 7.4,
+    backlogs: 0,
+    placement_status: "unplaced",
+    student_skills: [{ skill_id: "sk4" }, { skill_id: "sk5" }, { skill_id: "sk13" }],
+    projects: [{ id: "p4" }],
+    certifications: [],
+    documents: [{ status: "pending" }],
+    applications: [{ id: "app5" }],
+  },
+  {
+    id: "s4",
+    full_name: "Ishita Rao",
+    email: "ishita.r@demo.campus",
+    roll_no: "21EC004",
+    branch: "ECE",
+    batch_year: 2025,
+    cgpa: 8.2,
+    backlogs: 0,
+    placement_status: "placed",
+    student_skills: [{ skill_id: "sk14" }, { skill_id: "sk3" }, { skill_id: "sk9" }],
+    projects: [{ id: "p5" }],
+    certifications: [{ id: "c3" }],
+    documents: [{ status: "verified" }],
+    applications: [{ id: "app6" }],
+  },
+  {
+    id: "s5",
+    full_name: "Vivaan Gupta",
+    email: "vivaan.g@demo.campus",
+    roll_no: "21CS005",
+    branch: "CSE",
+    batch_year: 2025,
+    cgpa: 6.4,
+    backlogs: 2,
+    placement_status: "unplaced",
+    student_skills: [{ skill_id: "sk11" }],
+    projects: [],
+    certifications: [],
+    documents: [{ status: "pending" }],
+    applications: [],
+  },
+  {
+    id: "s6",
+    full_name: "Ananya Iyer",
+    email: "ananya.i@demo.campus",
+    roll_no: "21IT006",
+    branch: "IT",
+    batch_year: 2025,
+    cgpa: 8.9,
+    backlogs: 0,
+    placement_status: "placed",
+    student_skills: [
+      { skill_id: "sk4" },
+      { skill_id: "sk5" },
+      { skill_id: "sk6" },
+      { skill_id: "sk7" },
+    ],
+    projects: [{ id: "p6" }, { id: "p7" }],
+    certifications: [{ id: "c4" }],
+    documents: [{ status: "verified" }],
+    applications: [{ id: "app7" }],
+  },
+  {
+    id: "s7",
+    full_name: "Rohan Das",
+    email: "rohan.d@demo.campus",
+    roll_no: "21ME007",
+    branch: "ME",
+    batch_year: 2025,
+    cgpa: 7.1,
+    backlogs: 1,
+    placement_status: "unplaced",
+    student_skills: [{ skill_id: "sk1" }, { skill_id: "sk15" }],
+    projects: [{ id: "p8" }],
+    certifications: [],
+    documents: [{ status: "verified" }],
+    applications: [{ id: "app8" }],
+  },
+  {
+    id: "s8",
+    full_name: "Saanvi Joshi",
+    email: "saanvi.j@demo.campus",
+    roll_no: "21CS008",
+    branch: "CSE",
+    batch_year: 2025,
+    cgpa: 8.0,
+    backlogs: 0,
+    placement_status: "shortlisted",
+    student_skills: [
+      { skill_id: "sk8" },
+      { skill_id: "sk9" },
+      { skill_id: "sk2" },
+      { skill_id: "sk7" },
+    ],
+    projects: [{ id: "p9" }],
+    certifications: [{ id: "c5" }],
+    documents: [{ status: "verified" }],
+    applications: [{ id: "app9" }],
+  },
+  {
+    id: "s9",
+    full_name: "Arjun Pillai",
+    email: "arjun.p@demo.campus",
+    roll_no: "21EE009",
+    branch: "EE",
+    batch_year: 2025,
+    cgpa: 7.6,
+    backlogs: 0,
+    placement_status: "unplaced",
+    student_skills: [{ skill_id: "sk14" }, { skill_id: "sk3" }],
+    projects: [{ id: "p10" }],
+    certifications: [],
+    documents: [{ status: "verified" }],
+    applications: [{ id: "app10" }],
+  },
+  {
+    id: "s10",
+    full_name: "Aditya Verma",
+    email: "aditya.v@demo.campus",
+    roll_no: "21CS011",
+    branch: "CSE",
+    batch_year: 2025,
+    cgpa: 5.9,
+    backlogs: 3,
+    placement_status: "unplaced",
+    student_skills: [{ skill_id: "sk8" }],
+    projects: [],
+    certifications: [],
+    documents: [{ status: "pending" }],
+    applications: [],
+  },
 ];
 
 export const MOCK_ADMIN_APPS = [
@@ -591,18 +841,68 @@ export const MOCK_OFFERS = [
 ];
 
 export const SEED_DRIVES: MockDrive[] = [
-  { id: "d1", company_id: "c1", title: "Novatek Systems Campus Drive", drive_date: "2026-10-15", venue: "Main Auditorium", status: "scheduled", company: { name: "Novatek Systems" } },
-  { id: "d2", company_id: "c4", title: "Finloop Payments Placement Drive", drive_date: "2026-10-22", venue: "Seminar Hall B", status: "scheduled", company: { name: "Finloop Payments" } },
-  { id: "d3", company_id: "c2", title: "Quantiva AI Hiring Day", drive_date: "2026-09-15", venue: "Online", status: "completed", company: { name: "Quantiva Analytics" } },
-  { id: "d4", company_id: "c5", title: "Cloudnest Labs Cloud Drive", drive_date: "2026-11-02", venue: "Tech Complex Audi", status: "scheduled", company: { name: "Cloudnest Labs" } },
+  {
+    id: "d1",
+    company_id: "c1",
+    title: "Novatek Systems Campus Drive",
+    drive_date: "2026-10-15",
+    venue: "Main Auditorium",
+    status: "scheduled",
+    company: { name: "Novatek Systems" },
+  },
+  {
+    id: "d2",
+    company_id: "c4",
+    title: "Finloop Payments Placement Drive",
+    drive_date: "2026-10-22",
+    venue: "Seminar Hall B",
+    status: "scheduled",
+    company: { name: "Finloop Payments" },
+  },
+  {
+    id: "d3",
+    company_id: "c2",
+    title: "Quantiva AI Hiring Day",
+    drive_date: "2026-09-15",
+    venue: "Online",
+    status: "completed",
+    company: { name: "Quantiva Analytics" },
+  },
+  {
+    id: "d4",
+    company_id: "c5",
+    title: "Cloudnest Labs Cloud Drive",
+    drive_date: "2026-11-02",
+    venue: "Tech Complex Audi",
+    status: "scheduled",
+    company: { name: "Cloudnest Labs" },
+  },
 ];
 
 export const MOCK_DRIVES = SEED_DRIVES;
 
 export const SEED_PENDING_DOCS: MockPendingDoc[] = [
-  { id: "doc1", doc_type: "Semester Marksheets", status: "pending", student: { full_name: "Kabir Nair", branch: "IT" }, created_at: new Date().toISOString() },
-  { id: "doc2", doc_type: "Degree Provisional Certificate", status: "pending", student: { full_name: "Vivaan Gupta", branch: "CSE" }, created_at: new Date().toISOString() },
-  { id: "doc3", doc_type: "OBC / Category Certificate", status: "pending", student: { full_name: "Aditya Verma", branch: "CSE" }, created_at: new Date().toISOString() },
+  {
+    id: "doc1",
+    doc_type: "Semester Marksheets",
+    status: "pending",
+    student: { full_name: "Kabir Nair", branch: "IT" },
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "doc2",
+    doc_type: "Degree Provisional Certificate",
+    status: "pending",
+    student: { full_name: "Vivaan Gupta", branch: "CSE" },
+    created_at: new Date().toISOString(),
+  },
+  {
+    id: "doc3",
+    doc_type: "OBC / Category Certificate",
+    status: "pending",
+    student: { full_name: "Aditya Verma", branch: "CSE" },
+    created_at: new Date().toISOString(),
+  },
 ];
 
 export const MOCK_PENDING_DOCS = SEED_PENDING_DOCS;
@@ -625,7 +925,9 @@ function writeLocal<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(`campuslink_demo_${key}`, JSON.stringify(value));
-  } catch {}
+  } catch (error) {
+    console.warn(`[DemoData] Could not persist local ${key} data:`, error);
+  }
 }
 
 // Student Store
@@ -666,7 +968,11 @@ export function getMockProjects(): MockProject[] {
   return readLocal("projects", SEED_PROJECTS);
 }
 
-export function addMockProject(data: { title: string; tech: string; description?: string }): MockProject[] {
+export function addMockProject(data: {
+  title: string;
+  tech: string;
+  description?: string;
+}): MockProject[] {
   const current = getMockProjects();
   const newProj: MockProject = {
     id: `proj-${Date.now()}`,
@@ -693,7 +999,11 @@ export function getMockCertifications(): MockCert[] {
   return readLocal("certifications", SEED_CERTS);
 }
 
-export function addMockCert(data: { name: string; issuer: string; issued_on?: string }): MockCert[] {
+export function addMockCert(data: {
+  name: string;
+  issuer: string;
+  issued_on?: string;
+}): MockCert[] {
   const current = getMockCertifications();
   const newCert: MockCert = {
     id: `cert-${Date.now()}`,
@@ -794,7 +1104,10 @@ export function addMockJob(data: {
   return newJob;
 }
 
-export function updateMockJob(jobId: string, updates: Partial<MockJob> & { skill_ids?: string[] }): MockJob | null {
+export function updateMockJob(
+  jobId: string,
+  updates: Partial<MockJob> & { skill_ids?: string[] },
+): MockJob | null {
   const current = getMockJobs();
   const index = current.findIndex((job) => job.id === jobId);
   if (index < 0) return null;
@@ -831,15 +1144,19 @@ export function getMockApplications(): MockApplication[] {
   const jobs = getMockJobs();
   return apps.map((application) => ({
     ...application,
-    student: application.student ?? MOCK_ALL_STUDENTS.find((student) => student.id === application.student_id) ?? {
-      id: application.student_id,
-      full_name: "Student",
-      branch: "CSE",
-      cgpa: 0,
-      backlogs: 0,
-      email: "student@demo.campus",
-    },
-    job: application.job ?? jobs.find((job) => job.id === application.job_id) ?? getJobById(application.job_id),
+    student: application.student ??
+      MOCK_ALL_STUDENTS.find((student) => student.id === application.student_id) ?? {
+        id: application.student_id,
+        full_name: "Student",
+        branch: "CSE",
+        cgpa: 0,
+        backlogs: 0,
+        email: "student@demo.campus",
+      },
+    job:
+      application.job ??
+      jobs.find((job) => job.id === application.job_id) ??
+      getJobById(application.job_id),
   }));
 }
 
@@ -875,7 +1192,10 @@ export function updateMockApplicationStatus(appId: string, status: string): void
   }
 }
 
-export function addMockInterview(appId: string, data: { round: string; scheduled_at: string; mode: string; location?: string }): void {
+export function addMockInterview(
+  appId: string,
+  data: { round: string; scheduled_at: string; mode: string; location?: string },
+): void {
   const current = getMockApplications();
   const newInterview: MockInterview = {
     id: `int-${Date.now()}`,
@@ -887,14 +1207,15 @@ export function addMockInterview(appId: string, data: { round: string; scheduled
     status: "scheduled",
   };
   const updated = current.map((a) =>
-    a.id === appId
-      ? { ...a, status: "interview", interviews: [...a.interviews, newInterview] }
-      : a
+    a.id === appId ? { ...a, status: "interview", interviews: [...a.interviews, newInterview] } : a,
   );
   writeLocal("applications", updated);
 }
 
-export function addMockOffer(appId: string, data: { ctc_lpa: number; joining_date?: string | null }): void {
+export function addMockOffer(
+  appId: string,
+  data: { ctc_lpa: number; joining_date?: string | null },
+): void {
   const current = getMockApplications();
   const newOffer: MockOffer = {
     id: `off-${Date.now()}`,
@@ -904,9 +1225,7 @@ export function addMockOffer(appId: string, data: { ctc_lpa: number; joining_dat
     status: "released",
   };
   const updated = current.map((a) =>
-    a.id === appId
-      ? { ...a, status: "offered", offers: [newOffer] }
-      : a
+    a.id === appId ? { ...a, status: "offered", offers: [newOffer] } : a,
   );
   writeLocal("applications", updated);
 }
@@ -933,7 +1252,12 @@ export function getMockDrives(): MockDrive[] {
   return readLocal("drives", SEED_DRIVES);
 }
 
-export function addMockDrive(data: { company_id: string; title: string; drive_date: string; venue: string }): MockDrive[] {
+export function addMockDrive(data: {
+  company_id: string;
+  title: string;
+  drive_date: string;
+  venue: string;
+}): MockDrive[] {
   const current = getMockDrives();
   const company = getCompanyById(data.company_id);
   const newDrive: MockDrive = {
@@ -977,7 +1301,18 @@ export function updateMockPendingDocStatus(docId: string, status: string): MockP
 
 export function resetMockStore(): void {
   if (typeof window === "undefined") return;
-  const keys = ["student", "student_skills", "projects", "certifications", "documents", "jobs", "applications", "drives", "pending_docs", "notifications"];
+  const keys = [
+    "student",
+    "student_skills",
+    "projects",
+    "certifications",
+    "documents",
+    "jobs",
+    "applications",
+    "drives",
+    "pending_docs",
+    "notifications",
+  ];
   keys.forEach((k) => window.localStorage.removeItem(`campuslink_demo_${k}`));
 }
 
@@ -989,7 +1324,10 @@ export const SEED_NOTIFICATIONS: MockNotification[] = [
   {
     id: "n1",
     title: "Interview Scheduled — Finloop Payments",
-    body: "Your Technical Round 1 interview is scheduled for " + new Date(Date.now() + 2 * 86400000).toLocaleDateString() + " via Google Meet.",
+    body:
+      "Your Technical Round 1 interview is scheduled for " +
+      new Date(Date.now() + 2 * 86400000).toLocaleDateString() +
+      " via Google Meet.",
     category: "interview",
     read: false,
     created_at: new Date(Date.now() - 1 * 3600000).toISOString(),
@@ -1013,7 +1351,10 @@ export const SEED_NOTIFICATIONS: MockNotification[] = [
   {
     id: "n4",
     title: "Placement Drive Reminder — Novatek Systems",
-    body: "The Novatek Systems Campus Drive is scheduled on " + new Date(Date.now() + 9 * 86400000).toLocaleDateString() + " at Main Auditorium.",
+    body:
+      "The Novatek Systems Campus Drive is scheduled on " +
+      new Date(Date.now() + 9 * 86400000).toLocaleDateString() +
+      " at Main Auditorium.",
     category: "drive",
     read: true,
     created_at: new Date(Date.now() - 1 * 86400000).toISOString(),
@@ -1046,9 +1387,16 @@ export function markAllNotificationsRead(): MockNotification[] {
   return updated;
 }
 
-export function addMockNotification(n: Omit<MockNotification, "id" | "created_at" | "read">): MockNotification[] {
+export function addMockNotification(
+  n: Omit<MockNotification, "id" | "created_at" | "read">,
+): MockNotification[] {
   const current = getMockNotifications();
-  const newN: MockNotification = { ...n, id: `notif-${Date.now()}`, read: false, created_at: new Date().toISOString() };
+  const newN: MockNotification = {
+    ...n,
+    id: `notif-${Date.now()}`,
+    read: false,
+    created_at: new Date().toISOString(),
+  };
   const updated = [newN, ...current];
   writeLocal("notifications", updated);
   return updated;

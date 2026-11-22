@@ -1,5 +1,14 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
-import { Bell, Briefcase, ClipboardList, FileText, GraduationCap, LayoutDashboard, TrendingUp, UserRound } from "lucide-react";
+import {
+  Bell,
+  Briefcase,
+  ClipboardList,
+  FileText,
+  GraduationCap,
+  LayoutDashboard,
+  TrendingUp,
+  UserRound,
+} from "lucide-react";
 import { AppShell } from "@/components/AppShell";
 
 export const Route = createFileRoute("/_authenticated/student")({

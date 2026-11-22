@@ -1,1 +1,4 @@
-project_id = "aqmjzbylxjfmgccxbkwl"
+project_id = "tjowlbeengzgedikrbra"
+
+[functions.resume-analysis]
+verify_jwt = true

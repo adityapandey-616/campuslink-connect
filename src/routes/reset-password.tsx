@@ -26,12 +26,21 @@ function ResetPassword() {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
     const pw = String(f.get("password"));
-    if (pw.length < 8) { toast.error("Password must be at least 8 characters."); return; }
-    if (pw !== f.get("confirm")) { toast.error("Passwords do not match."); return; }
+    if (pw.length < 8) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
+    if (pw !== f.get("confirm")) {
+      toast.error("Passwords do not match.");
+      return;
+    }
     setBusy(true);
     const { error } = await supabase.auth.updateUser({ password: pw });
     setBusy(false);
-    if (error) { toast.error(error.message); return; }
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Password updated");
     navigate({ to: "/dashboard" });
   }
@@ -40,9 +49,17 @@ function ResetPassword() {
       <form onSubmit={onSubmit} className="w-full max-w-sm space-y-4">
         <Logo />
         <h1 className="text-2xl font-semibold">Set a new password</h1>
-        <div className="space-y-1.5"><Label>New password</Label><Input name="password" type="password" required /></div>
-        <div className="space-y-1.5"><Label>Confirm password</Label><Input name="confirm" type="password" required /></div>
-        <Button className="w-full" disabled={busy}>Update password</Button>
+        <div className="space-y-1.5">
+          <Label>New password</Label>
+          <Input name="password" type="password" required />
+        </div>
+        <div className="space-y-1.5">
+          <Label>Confirm password</Label>
+          <Input name="confirm" type="password" required />
+        </div>
+        <Button className="w-full" disabled={busy}>
+          Update password
+        </Button>
       </form>
     </div>
   );

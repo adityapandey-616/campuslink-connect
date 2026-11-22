@@ -5,16 +5,24 @@ import { toast } from "sonner";
 import { Briefcase, Calendar, CheckCircle2, ChevronDown, ChevronUp, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Empty, Loading, PageHeader } from "@/components/AppShell";
-import { myApplicationsQuery } from "@/lib/student-data";
+import { supabase } from "@/integrations/supabase/client";
+import { myApplicationsQuery, type StudentApplication } from "@/lib/student-data";
 import { statusStyles } from "@/lib/campus";
-import { updateMockOfferStatus, addMockNotification, type MockApplication } from "@/lib/mock-data";
 
 export const Route = createFileRoute("/_authenticated/student/applications")({
   component: Applications,
 });
 
 const STEPS = ["applied", "shortlisted", "interview", "offered", "joined"] as const;
-const STATUS_TABS = ["all", "applied", "shortlisted", "interview", "offered", "joined", "rejected"] as const;
+const STATUS_TABS = [
+  "all",
+  "applied",
+  "shortlisted",
+  "interview",
+  "offered",
+  "joined",
+  "rejected",
+] as const;
 
 function Applications() {
   const apps = useQuery(myApplicationsQuery);
@@ -23,30 +31,50 @@ function Applications() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const respond = useMutation({
-    mutationFn: async ({ offerId, status, jobTitle, company }: { offerId: string; status: string; jobTitle: string; company: string }) => {
-      updateMockOfferStatus(offerId, status);
-      addMockNotification({
-        title: status === "accepted" ? `Offer Accepted — ${company}` : `Offer Declined — ${company}`,
-        body: status === "accepted"
-          ? `You have accepted the offer for ${jobTitle} at ${company}. Congratulations! 🎉`
-          : `You have declined the offer for ${jobTitle} at ${company}.`,
-        category: "offer",
-      });
+    mutationFn: async ({
+      offerId,
+      status,
+    }: {
+      offerId: string;
+      status: "accepted" | "declined";
+    }) => {
+      const { data, error } = await supabase
+        .from("offers")
+        .update({ status })
+        .eq("id", offerId)
+        .eq("status", "released")
+        .select("id")
+        .maybeSingle();
+
+      if (error) {
+        throw new Error(`Could not update your offer response: ${error.message}`);
+      }
+      if (!data) {
+        throw new Error("This offer is no longer available for a response.");
+      }
     },
     onSuccess: (_d, vars) => {
-      toast.success(vars.status === "accepted" ? "🎉 Offer accepted! Congratulations!" : "Offer declined.");
+      toast.success(
+        vars.status === "accepted" ? "🎉 Offer accepted! Congratulations!" : "Offer declined.",
+      );
       qc.invalidateQueries({ queryKey: ["my-applications"] });
-      qc.invalidateQueries({ queryKey: ["me-student"] });
-      qc.invalidateQueries({ queryKey: ["mock-notifications"] });
     },
-    onError: () => {
-      toast.error("Something went wrong. Please try again.");
+    onError: (error) => {
+      toast.error(error instanceof Error ? error.message : "Something went wrong.");
     },
   });
 
   if (apps.isLoading) return <Loading />;
+  if (apps.error) {
+    return (
+      <Empty>
+        Applications could not be loaded:{" "}
+        {apps.error instanceof Error ? apps.error.message : "Unknown Supabase error"}
+      </Empty>
+    );
+  }
 
-  const list: MockApplication[] = apps.data ?? [];
+  const list: StudentApplication[] = apps.data ?? [];
   const filtered = tab === "all" ? list : list.filter((a) => a.status === tab);
   const counts = STATUS_TABS.reduce<Record<string, number>>((acc, s) => {
     acc[s] = s === "all" ? list.length : list.filter((a) => a.status === s).length;
@@ -69,7 +97,9 @@ function Applications() {
               onClick={() => setTab(s)}
               className={`rounded-lg border p-3 text-left transition-colors hover:border-accent/50 ${tab === s ? "border-accent/50 bg-accent/5" : "bg-card"}`}
             >
-              <div className={`font-display text-2xl font-bold ${statusStyles[s]?.includes("accent") ? "text-accent" : statusStyles[s]?.includes("success") ? "text-success" : ""}`}>
+              <div
+                className={`font-display text-2xl font-bold ${statusStyles[s]?.includes("accent") ? "text-accent" : statusStyles[s]?.includes("success") ? "text-success" : ""}`}
+              >
                 {counts[s]}
               </div>
               <div className="text-xs text-muted-foreground capitalize mt-0.5">{s}</div>
@@ -85,7 +115,9 @@ function Applications() {
             key={t}
             onClick={() => setTab(t)}
             className={`shrink-0 rounded-md px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
-              tab === t ? "bg-accent text-accent-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              tab === t
+                ? "bg-accent text-accent-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
             }`}
           >
             {t === "all" ? `All (${list.length})` : `${t} (${counts[t]})`}
@@ -99,7 +131,11 @@ function Applications() {
           <Briefcase className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
           <div className="font-medium">No applications yet.</div>
           <div className="mt-1 text-muted-foreground">
-            Head to <a href="/student/opportunities" className="text-accent underline">Opportunities</a> to find your best matches and apply.
+            Head to{" "}
+            <a href="/student/opportunities" className="text-accent underline">
+              Opportunities
+            </a>{" "}
+            to find your best matches and apply.
           </div>
         </Empty>
       )}
@@ -111,7 +147,7 @@ function Applications() {
       {/* Application cards */}
       <div className="space-y-3">
         {filtered.map((a) => {
-          const stepIdx = STEPS.indexOf(a.status as typeof STEPS[number]);
+          const stepIdx = STEPS.indexOf(a.status as (typeof STEPS)[number]);
           const offer = Array.isArray(a.offers) && a.offers.length > 0 ? a.offers[0] : null;
           const isExpanded = expandedId === a.id;
           const hasDetails = a.interviews.length > 0 || offer;
@@ -127,14 +163,18 @@ function Applications() {
                   <div className="min-w-0">
                     <div className="font-semibold">{a.job?.title}</div>
                     <div className="text-sm text-muted-foreground mt-0.5">
-                      {a.job?.company?.name} · {a.job?.location} · ₹{a.job?.ctc_lpa} LPA
+                      {a.job?.company?.name ?? "Company unavailable"} · {a.job?.location} · Salary
+                      not listed
                     </div>
                     <div className="text-xs text-muted-foreground mt-1">
-                      Applied {new Date(a.created_at).toLocaleDateString(undefined, { dateStyle: "medium" })} · Match {a.match_score}%
+                      Application timestamp and match score are not represented in the current
+                      generated application type.
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`rounded px-2.5 py-0.5 text-xs font-semibold capitalize ${statusStyles[a.status] ?? "bg-secondary"}`}>
+                    <span
+                      className={`rounded px-2.5 py-0.5 text-xs font-semibold capitalize ${statusStyles[a.status ?? ""] ?? "bg-secondary"}`}
+                    >
                       {a.status}
                     </span>
                     {hasDetails && (
@@ -143,7 +183,11 @@ function Applications() {
                         className="rounded-md border p-1 hover:bg-secondary"
                         aria-label={isExpanded ? "Collapse" : "Expand"}
                       >
-                        {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
                       </button>
                     )}
                   </div>
@@ -160,7 +204,9 @@ function Applications() {
                               i <= stepIdx ? "bg-accent" : "bg-muted"
                             }`}
                           />
-                          <div className="mt-1 text-[10px] capitalize text-muted-foreground">{s}</div>
+                          <div className="mt-1 text-[10px] capitalize text-muted-foreground">
+                            {s}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -169,7 +215,8 @@ function Applications() {
 
                 {a.status === "rejected" && (
                   <div className="mt-3 rounded-md bg-destructive/5 px-3 py-2 text-xs text-destructive">
-                    This application was not taken forward. Keep applying — every attempt is a learning experience.
+                    This application was not taken forward. Keep applying — every attempt is a
+                    learning experience.
                   </div>
                 )}
               </div>
@@ -194,23 +241,42 @@ function Applications() {
                             }`}
                           >
                             <div>
-                              <div className="font-medium">{i.round}</div>
+                              <div className="font-medium">{i.interview_type}</div>
                               <div className="text-xs text-muted-foreground mt-0.5">
-                                {i.mode} · {i.location}
+                                {i.meeting_link ? (
+                                  <a
+                                    href={i.meeting_link}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-accent hover:underline"
+                                  >
+                                    Join interview
+                                  </a>
+                                ) : (
+                                  "Meeting link not provided"
+                                )}
                               </div>
                             </div>
                             <div className="text-right">
                               <div className="flex items-center gap-1.5 text-sm font-medium">
                                 <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
-                                {new Date(i.scheduled_at).toLocaleDateString(undefined, { dateStyle: "medium" })}
+                                {new Date(i.scheduled_at).toLocaleDateString(undefined, {
+                                  dateStyle: "medium",
+                                })}
                               </div>
                               <div className="flex items-center gap-1.5 text-xs text-muted-foreground mt-0.5">
                                 <Clock className="h-3 w-3" />
-                                {new Date(i.scheduled_at).toLocaleTimeString(undefined, { timeStyle: "short" })}
+                                {new Date(i.scheduled_at).toLocaleTimeString(undefined, {
+                                  timeStyle: "short",
+                                })}
                               </div>
-                              <span className={`inline-block mt-1 rounded px-1.5 py-0.5 text-[10px] capitalize ${
-                                i.status === "scheduled" ? "bg-warning/20 text-warning-foreground" : "bg-secondary text-muted-foreground"
-                              }`}>
+                              <span
+                                className={`inline-block mt-1 rounded px-1.5 py-0.5 text-[10px] capitalize ${
+                                  i.status === "scheduled"
+                                    ? "bg-warning/20 text-warning-foreground"
+                                    : "bg-secondary text-muted-foreground"
+                                }`}
+                              >
                                 {i.status}
                               </span>
                             </div>
@@ -232,7 +298,7 @@ function Applications() {
                             <div className="flex items-center gap-2">
                               <CheckCircle2 className="h-4 w-4 text-success" />
                               <span className="font-semibold text-success">
-                                ₹{offer.ctc_lpa} LPA
+                                {offer.salary} (salary unit not verified)
                               </span>
                             </div>
                             <div className="mt-1 text-sm text-muted-foreground">
@@ -248,8 +314,6 @@ function Applications() {
                                   respond.mutate({
                                     offerId: offer.id,
                                     status: "accepted",
-                                    jobTitle: a.job?.title ?? "",
-                                    company: a.job?.company?.name ?? "",
                                   })
                                 }
                                 disabled={respond.isPending}
@@ -263,8 +327,6 @@ function Applications() {
                                   respond.mutate({
                                     offerId: offer.id,
                                     status: "declined",
-                                    jobTitle: a.job?.title ?? "",
-                                    company: a.job?.company?.name ?? "",
                                   })
                                 }
                                 disabled={respond.isPending}
@@ -287,7 +349,8 @@ function Applications() {
 
                         {offer.status === "released" && (
                           <p className="mt-3 text-xs text-muted-foreground">
-                            Please accept or decline the offer. Accepting will update your placement status to "Placed".
+                            Please accept or decline the offer. Your response will be recorded on
+                            this application.
                           </p>
                         )}
                       </div>
@@ -303,7 +366,8 @@ function Applications() {
                   onClick={() => setExpandedId(a.id)}
                 >
                   <ChevronDown className="h-3.5 w-3.5" />
-                  {a.interviews.length > 0 && `${a.interviews.length} interview${a.interviews.length > 1 ? "s" : ""}`}
+                  {a.interviews.length > 0 &&
+                    `${a.interviews.length} interview${a.interviews.length > 1 ? "s" : ""}`}
                   {a.interviews.length > 0 && offer && " · "}
                   {offer && "Offer letter available"}
                 </div>

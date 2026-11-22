@@ -127,7 +127,9 @@ function writeLocal<T>(key: string, value: T): void {
   if (typeof window === "undefined") return;
   try {
     window.localStorage.setItem(`campuslink_admin_${key}`, JSON.stringify(value));
-  } catch {}
+  } catch (error) {
+    console.warn(`[AdminData] Could not persist local ${key} data:`, error);
+  }
 }
 
 // ----------------------------------------------------
@@ -519,7 +521,8 @@ const SEED_ADMIN_INTERVIEWS: AdminInterviewItem[] = [
     location: "Zoom",
     status: "scheduled",
     has_conflict: true,
-    conflict_reason: "Student schedule overlap: Aarav Mehta has Finloop round at 10:00 AM on the same day.",
+    conflict_reason:
+      "Student schedule overlap: Aarav Mehta has Finloop round at 10:00 AM on the same day.",
   },
   {
     id: "int-adm-4",
@@ -598,7 +601,10 @@ export function getAdminCompanies(): AdminCompany[] {
   return readLocal("companies", SEED_ADMIN_COMPANIES);
 }
 
-export function updateAdminCompanyStatus(companyId: string, status: AdminCompany["status"]): AdminCompany[] {
+export function updateAdminCompanyStatus(
+  companyId: string,
+  status: AdminCompany["status"],
+): AdminCompany[] {
   const current = getAdminCompanies();
   const updated = current.map((c) => (c.id === companyId ? { ...c, status } : c));
   writeLocal("companies", updated);
@@ -633,7 +639,10 @@ export function addAdminDrive(data: Omit<AdminDriveDetail, "id">): AdminDriveDet
   return newDrive;
 }
 
-export function updateAdminDrive(driveId: string, updates: Partial<AdminDriveDetail>): AdminDriveDetail[] {
+export function updateAdminDrive(
+  driveId: string,
+  updates: Partial<AdminDriveDetail>,
+): AdminDriveDetail[] {
   const current = getAdminDrives();
   const updated = current.map((d) => (d.id === driveId ? { ...d, ...updates } : d));
   writeLocal("drives_detailed", updated);
@@ -654,12 +663,13 @@ export function getAdminOffers(): AdminOfferItem[] {
 export function updateAdminOfferStatus(
   offerId: string,
   offer_status: AdminOfferItem["offer_status"],
-  joining_status?: AdminOfferItem["joining_status"]
+  joining_status?: AdminOfferItem["joining_status"],
 ): AdminOfferItem[] {
   const current = getAdminOffers();
   const updated = current.map((o) => {
     if (o.id !== offerId) return o;
-    const nextJoining = joining_status ?? (offer_status === "accepted" ? "joined" : o.joining_status);
+    const nextJoining =
+      joining_status ?? (offer_status === "accepted" ? "joined" : o.joining_status);
     return { ...o, offer_status, joining_status: nextJoining };
   });
   writeLocal("offers", updated);
@@ -680,7 +690,7 @@ export function getAdminDocuments(): AdminDocumentItem[] {
 export function updateAdminDocumentStatus(
   docId: string,
   status: AdminDocumentItem["status"],
-  rejection_reason?: string
+  rejection_reason?: string,
 ): AdminDocumentItem[] {
   const current = getAdminDocuments();
   const updated = current.map((d) =>
@@ -691,7 +701,7 @@ export function updateAdminDocumentStatus(
           rejection_reason: rejection_reason ?? d.rejection_reason,
           reviewed_at: new Date().toISOString(),
         }
-      : d
+      : d,
   );
   writeLocal("documents", updated);
   return updated;
@@ -702,7 +712,9 @@ export function getAdminInterviews(): AdminInterviewItem[] {
   return checkInterviewConflicts(raw);
 }
 
-export function addAdminInterview(data: Omit<AdminInterviewItem, "id" | "has_conflict" | "conflict_reason">): AdminInterviewItem {
+export function addAdminInterview(
+  data: Omit<AdminInterviewItem, "id" | "has_conflict" | "conflict_reason">,
+): AdminInterviewItem {
   const current = readLocal("interviews", SEED_ADMIN_INTERVIEWS);
   const newInt: AdminInterviewItem = {
     ...data,
@@ -715,7 +727,10 @@ export function addAdminInterview(data: Omit<AdminInterviewItem, "id" | "has_con
   return newInt;
 }
 
-export function updateAdminInterviewStatus(interviewId: string, status: AdminInterviewItem["status"]): AdminInterviewItem[] {
+export function updateAdminInterviewStatus(
+  interviewId: string,
+  status: AdminInterviewItem["status"],
+): AdminInterviewItem[] {
   const current = readLocal("interviews", SEED_ADMIN_INTERVIEWS);
   const updated = current.map((i) => (i.id === interviewId ? { ...i, status } : i));
   const checked = checkInterviewConflicts(updated);
@@ -723,10 +738,14 @@ export function updateAdminInterviewStatus(interviewId: string, status: AdminInt
   return checked;
 }
 
-export function rescheduleAdminInterview(interviewId: string, newDate: string, newLocation?: string): AdminInterviewItem[] {
+export function rescheduleAdminInterview(
+  interviewId: string,
+  newDate: string,
+  newLocation?: string,
+): AdminInterviewItem[] {
   const current = readLocal("interviews", SEED_ADMIN_INTERVIEWS);
   const updated = current.map((i) =>
-    i.id === interviewId ? { ...i, scheduled_at: newDate, location: newLocation ?? i.location } : i
+    i.id === interviewId ? { ...i, scheduled_at: newDate, location: newLocation ?? i.location } : i,
   );
   const checked = checkInterviewConflicts(updated);
   writeLocal("interviews", checked);
@@ -742,7 +761,8 @@ function checkInterviewConflicts(interviews: AdminInterviewItem[]): AdminIntervi
 
     // Check conflict against any other active interview
     const conflict = interviews.find((other, otherIdx) => {
-      if (idx === otherIdx || other.status === "completed" || other.status === "cancelled") return false;
+      if (idx === otherIdx || other.status === "completed" || other.status === "cancelled")
+        return false;
       const otherTime = new Date(other.scheduled_at).getTime();
       const diffHours = Math.abs(itemTime - otherTime) / (1000 * 60 * 60);
 
@@ -751,7 +771,12 @@ function checkInterviewConflicts(interviews: AdminInterviewItem[]): AdminIntervi
         return true;
       }
       // Venue / slot collision if same location and within 1 hour
-      if (item.location && item.location !== "Online" && item.location === other.location && diffHours < 1) {
+      if (
+        item.location &&
+        item.location !== "Online" &&
+        item.location === other.location &&
+        diffHours < 1
+      ) {
         return true;
       }
       return false;
@@ -810,11 +835,15 @@ export function getAdminKPISummary(): AdminKPISummary {
   const placed = students.filter((s) => s.placement_status === "placed").length;
   const eligible = students.filter((s) => Number(s.cgpa) >= 6.5 && s.backlogs === 0).length;
   const pendingDocs = docs.filter((d) => d.status === "pending").length;
-  const activeDrives = drives.filter((d) => d.status === "scheduled" || d.status === "ongoing").length;
+  const activeDrives = drives.filter(
+    (d) => d.status === "scheduled" || d.status === "ongoing",
+  ).length;
   const upcomingInts = interviews.filter((i) => i.status === "scheduled").length;
 
   const ctcs = offers.map((o) => o.ctc_lpa);
-  const avgCTC = ctcs.length ? Number((ctcs.reduce((a, b) => a + b, 0) / ctcs.length).toFixed(1)) : 0;
+  const avgCTC = ctcs.length
+    ? Number((ctcs.reduce((a, b) => a + b, 0) / ctcs.length).toFixed(1))
+    : 0;
   const maxCTC = ctcs.length ? Math.max(...ctcs) : 0;
 
   return {
@@ -851,7 +880,7 @@ export function getCandidateEligibilityDetails(student: MockCandidate, job: Mock
       backlogs: student.backlogs,
       branch: student.branch,
     },
-    job
+    job,
   );
 
   return {

@@ -1,8 +1,16 @@
-import { type MockApplication, type MockCompany, type MockJob, getCompanyById, getMockApplications, getMockJobs } from "@/lib/mock-data";
+import {
+  type MockApplication,
+  type MockCompany,
+  type MockJob,
+  getCompanyById,
+  getMockApplications,
+  getMockJobs,
+} from "@/lib/mock-data";
 import { computeMatch } from "@/lib/campus";
 
 export type RecruiterStatus = "open" | "closed" | "draft";
-export type ApplicationStatus = "applied" | "shortlisted" | "interview" | "offered" | "joined" | "rejected";
+export type ApplicationStatus =
+  "applied" | "shortlisted" | "interview" | "offered" | "joined" | "rejected";
 export type OfferStatus = "released" | "accepted" | "declined" | "pending";
 
 export interface RecruiterCompanyProfile extends MockCompany {
@@ -107,7 +115,8 @@ export function getDefaultCompanyProfile(): RecruiterCompanyProfile {
     contact_email: "aisha.verma@novatek.example.com",
     contact_phone: "+91 98765 43210",
     website: company.website || "https://novatek.example.com",
-    description: company.description || "Technology company building enterprise software platforms.",
+    description:
+      company.description || "Technology company building enterprise software platforms.",
   };
 }
 
@@ -115,7 +124,9 @@ export function getStoredCompanyProfile(): RecruiterCompanyProfile {
   if (typeof window === "undefined") return getDefaultCompanyProfile();
   try {
     const saved = window.localStorage.getItem("campuslink_recruiter_company");
-    return saved ? { ...getDefaultCompanyProfile(), ...JSON.parse(saved) } : getDefaultCompanyProfile();
+    return saved
+      ? { ...getDefaultCompanyProfile(), ...JSON.parse(saved) }
+      : getDefaultCompanyProfile();
   } catch {
     return getDefaultCompanyProfile();
   }
@@ -129,22 +140,30 @@ export function saveCompanyProfile(profile: RecruiterCompanyProfile): RecruiterC
 }
 
 export function getRecruiterJobs(): MockJob[] {
-  return getMockJobs().filter((job) => job.company_id === "c1" || job.company_id === "c2" || job.company_id === "c4");
+  return getMockJobs().filter(
+    (job) => job.company_id === "c1" || job.company_id === "c2" || job.company_id === "c4",
+  );
 }
 
 export function buildDashboardData() {
   const jobs = getRecruiterJobs();
-  const applications = getMockApplications().filter((application) => jobs.some((job) => job.id === application.job_id));
-  const interviews = applications.flatMap((application) => application.interviews.map((interview) => ({
-    ...interview,
-    application,
-    job: application.job,
-  })));
-  const offers = applications.flatMap((application) => application.offers.map((offer) => ({
-    ...offer,
-    application,
-    job: application.job,
-  })));
+  const applications = getMockApplications().filter((application) =>
+    jobs.some((job) => job.id === application.job_id),
+  );
+  const interviews = applications.flatMap((application) =>
+    application.interviews.map((interview) => ({
+      ...interview,
+      application,
+      job: application.job,
+    })),
+  );
+  const offers = applications.flatMap((application) =>
+    application.offers.map((offer) => ({
+      ...offer,
+      application,
+      job: application.job,
+    })),
+  );
 
   return {
     jobs,
@@ -153,9 +172,14 @@ export function buildDashboardData() {
     offers,
     activeJobs: jobs.filter((job) => job.status === "open").length,
     totalApplicants: applications.length,
-    shortlisted: applications.filter((application) => ["shortlisted", "interview", "offered", "joined"].includes(application.status)).length,
-    interviewsScheduled: applications.filter((application) => application.status === "interview").length,
-    offersMade: applications.filter((application) => ["offered", "joined"].includes(application.status)).length,
+    shortlisted: applications.filter((application) =>
+      ["shortlisted", "interview", "offered", "joined"].includes(application.status),
+    ).length,
+    interviewsScheduled: applications.filter((application) => application.status === "interview")
+      .length,
+    offersMade: applications.filter((application) =>
+      ["offered", "joined"].includes(application.status),
+    ).length,
   };
 }
 
@@ -175,9 +199,23 @@ export function getCandidateSummary(student: {
   bio?: string;
 }): CandidateSummary {
   const skills = student.student_skills
-    ?.map((entry) => (entry.skill_id ? { id: entry.skill_id, name: entry.skill_id, level: 4 } : null))
+    ?.map((entry) =>
+      entry.skill_id ? { id: entry.skill_id, name: entry.skill_id, level: 4 } : null,
+    )
     .filter(Boolean) as CandidateSummary["skills"];
-  const readiness = Math.min(100, Math.max(0, Math.round((Number(student.cgpa) / 10) * 40 + (skills.length * 8) + (student.projects?.length ?? 0) * 8 + (student.certifications?.length ?? 0) * 7 + (student.documents?.length ?? 0) * 8)));
+  const readiness = Math.min(
+    100,
+    Math.max(
+      0,
+      Math.round(
+        (Number(student.cgpa) / 10) * 40 +
+          skills.length * 8 +
+          (student.projects?.length ?? 0) * 8 +
+          (student.certifications?.length ?? 0) * 7 +
+          (student.documents?.length ?? 0) * 8,
+      ),
+    ),
+  );
 
   return {
     id: student.id,
@@ -195,26 +233,34 @@ export function getCandidateSummary(student: {
     phone: student.phone,
     bio: student.bio,
     availability: "Available for campus placements",
-    experience: student.projects?.length ? `${student.projects.length} project${student.projects.length === 1 ? "" : "s"}` : "No public projects yet",
+    experience: student.projects?.length
+      ? `${student.projects.length} project${student.projects.length === 1 ? "" : "s"}`
+      : "No public projects yet",
     location: "Bengaluru",
     student_skills: student.student_skills ?? [],
   };
 }
 
-export function getCandidateMatch(student: CandidateSummary, job: Pick<MockJob, "skills" | "min_cgpa" | "max_backlogs" | "eligible_branches">) {
+export function getCandidateMatch(
+  student: CandidateSummary,
+  job: Pick<MockJob, "skills" | "min_cgpa" | "max_backlogs" | "eligible_branches">,
+) {
   const jobSkills = job.skills ?? [];
   const skillIds = new Set(student.student_skills.map((entry) => entry.skill_id));
-  const match = computeMatch({
-    studentSkillIds: skillIds,
-    cgpa: Number(student.cgpa),
-    backlogs: Number(student.backlogs),
-    branch: student.branch,
-  }, {
-    min_cgpa: job.min_cgpa,
-    max_backlogs: job.max_backlogs,
-    eligible_branches: job.eligible_branches,
-    skills: jobSkills,
-  });
+  const match = computeMatch(
+    {
+      studentSkillIds: skillIds,
+      cgpa: Number(student.cgpa),
+      backlogs: Number(student.backlogs),
+      branch: student.branch,
+    },
+    {
+      min_cgpa: job.min_cgpa,
+      max_backlogs: job.max_backlogs,
+      eligible_branches: job.eligible_branches,
+      skills: jobSkills,
+    },
+  );
   return {
     ...match,
     gapCount: match.missing.length,
@@ -224,7 +270,8 @@ export function getCandidateMatch(student: CandidateSummary, job: Pick<MockJob, 
   };
 }
 
-export const formatStatus = (status: string): string => status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+export const formatStatus = (status: string): string =>
+  status.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
 
 export function getJobApplicationSummary(job: MockJob) {
   const applications = job.applications ?? [];

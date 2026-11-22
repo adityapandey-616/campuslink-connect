@@ -119,10 +119,16 @@
     min-width: 320px;
     min-height: 100vh;
     background:
-      radial-gradient(circle at top left, color-mix(in srgb, var(--color-accent) 8%, transparent), transparent 32rem),
+      radial-gradient(
+        circle at top left,
+        color-mix(in srgb, var(--color-accent) 8%, transparent),
+        transparent 32rem
+      ),
       var(--color-background);
     color: var(--color-foreground);
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
 
   ::selection {
@@ -130,7 +136,11 @@
     color: var(--color-foreground);
   }
 
-  a, button, input, select, textarea {
+  a,
+  button,
+  input,
+  select,
+  textarea {
     transition-duration: 160ms;
     transition-timing-function: ease-out;
   }
@@ -142,7 +152,10 @@
 }
 
 @layer base {
-  h1, h2, h3, h4 {
+  h1,
+  h2,
+  h3,
+  h4 {
     font-family: var(--font-display);
     letter-spacing: -0.02em;
     text-wrap: balance;
@@ -158,7 +171,9 @@
     scroll-behavior: auto;
   }
 
-  *, *::before, *::after {
+  *,
+  *::before,
+  *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

@@ -1,6 +1,6 @@
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 import { z } from "zod";
-import { getSession, isAuthorizedForPath } from "@/lib/auth-store";
+import { isAuthorizedForPath, restoreSession } from "@/lib/auth-store";
 
 const authRedirectSearchSchema = z.object({
   redirect: z.string().optional(),
@@ -8,16 +8,15 @@ const authRedirectSearchSchema = z.object({
 });
 
 export const Route = createFileRoute("/_authenticated")({
-  ssr: false,
   validateSearch: authRedirectSearchSchema,
-  beforeLoad: ({ location }) => {
-    const session = getSession();
+  beforeLoad: async ({ location }) => {
+    const session = await restoreSession();
 
     // Check general authentication
     if (!session) {
       throw redirect({
         to: "/auth",
-        search: { redirect: location.pathname } as any,
+        search: { redirect: location.pathname },
       });
     }
 
@@ -25,11 +24,11 @@ export const Route = createFileRoute("/_authenticated")({
     const authCheck = isAuthorizedForPath(session, location.pathname);
     if (!authCheck.authorized) {
       throw redirect({
-        to: (authCheck.redirectTo ?? "/auth") as any,
+        to: authCheck.redirectTo ?? "/auth",
         search: {
           redirect: location.pathname,
           error: authCheck.reason,
-        } as any,
+        },
       });
     }
 

@@ -1,360 +1,246 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { Briefcase, MapPin, Search } from "lucide-react";
 import { toast } from "sonner";
-import { Briefcase, Check, Filter, Search, X } from "lucide-react";
+import { Empty, Loading, PageHeader } from "@/components/AppShell";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Empty, Loading, PageHeader } from "@/components/AppShell";
-import { jobsQuery, matchFor, meQuery, myApplicationsQuery, type Job } from "@/lib/student-data";
-import { addMockApplication, addMockNotification } from "@/lib/mock-data";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  liveStudentOpportunitiesQuery,
+  myApplicationsQuery,
+  myProfileQuery,
+  type LiveStudentOpportunity,
+} from "@/lib/student-data";
+
+const EMPTY_OPPORTUNITIES: LiveStudentOpportunity[] = [];
 
 export const Route = createFileRoute("/_authenticated/student/opportunities")({
   component: Opportunities,
 });
 
 function Opportunities() {
-  const me = useQuery(meQuery);
-  const jobs = useQuery(jobsQuery);
-  const apps = useQuery(myApplicationsQuery);
-  const qc = useQueryClient();
-
-  const [open, setOpen] = useState<Job | null>(null);
+  const profile = useQuery(myProfileQuery);
+  const opportunities = useQuery(liveStudentOpportunitiesQuery);
+  const applications = useQuery(myApplicationsQuery);
+  const queryClient = useQueryClient();
+  const [selected, setSelected] = useState<LiveStudentOpportunity | null>(null);
   const [search, setSearch] = useState("");
-  const [filterType, setFilterType] = useState("");
-  const [filterLocation, setFilterLocation] = useState("");
-  const [onlyEligible, setOnlyEligible] = useState(false);
-  const [showFilters, setShowFilters] = useState(false);
+  const [jobType, setJobType] = useState("all");
+  const [location, setLocation] = useState("all");
+
+  const rows = opportunities.data ?? EMPTY_OPPORTUNITIES;
+  const applicationIds = new Set(
+    (applications.data ?? []).map((application) => application.opportunity_id),
+  );
+  const jobTypes = [...new Set(rows.map((item) => item.job_type))].sort();
+  const locations = [...new Set(rows.map((item) => item.location))].sort();
+  const filtered = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return rows.filter((item) => {
+      const matchesSearch =
+        !needle ||
+        item.title.toLowerCase().includes(needle) ||
+        item.company?.name.toLowerCase().includes(needle) ||
+        item.location.toLowerCase().includes(needle) ||
+        item.description.toLowerCase().includes(needle);
+      const openByDeadline =
+        !item.deadline || item.deadline >= new Date().toISOString().slice(0, 10);
+      return (
+        matchesSearch &&
+        openByDeadline &&
+        (jobType === "all" || item.job_type === jobType) &&
+        (location === "all" || item.location === location)
+      );
+    });
+  }, [rows, search, jobType, location]);
 
   const apply = useMutation({
-    mutationFn: async ({ job, score }: { job: Job; score: number }) => {
-      addMockApplication(job.id, score);
-      addMockNotification({
-        title: `Application Submitted — ${job.company?.name}`,
-        body: `Your application for ${job.title} at ${job.company?.name} has been submitted successfully.`,
-        category: "application",
+    mutationFn: async (opportunity: LiveStudentOpportunity) => {
+      if (!profile.data) throw new Error("Your student profile is not available.");
+      if (opportunity.deadline && opportunity.deadline < new Date().toISOString().slice(0, 10)) {
+        throw new Error("This opportunity has passed its deadline.");
+      }
+
+      const { data: existingApplication, error: existingApplicationError } = await supabase
+        .from("applications")
+        .select("id")
+        .eq("profile_id", profile.data.id)
+        .eq("opportunity_id", opportunity.id)
+        .maybeSingle();
+      if (existingApplicationError) {
+        throw new Error(
+          `Could not verify whether you already applied: ${existingApplicationError.message}`,
+        );
+      }
+      if (existingApplication) throw new Error("You have already applied to this opportunity.");
+
+      const { error } = await supabase.from("applications").insert({
+        profile_id: profile.data.id,
+        opportunity_id: opportunity.id,
+        applied_at: new Date().toISOString(),
+        status: "applied",
       });
+      if (error?.code === "23505") {
+        throw new Error("You have already applied to this opportunity.");
+      }
+      if (error) throw new Error(`Could not submit application: ${error.message}`);
     },
     onSuccess: () => {
-      toast.success("Application submitted successfully!");
-      qc.invalidateQueries({ queryKey: ["my-applications"] });
-      qc.invalidateQueries({ queryKey: ["mock-notifications"] });
-      setOpen(null);
+      toast.success("Application submitted.");
+      queryClient.invalidateQueries({ queryKey: ["my-applications"] });
+      setSelected(null);
     },
-    onError: () => {
-      toast.error("Failed to submit application. Please try again.");
-    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not submit application."),
   });
 
-  const applied = new Set((apps.data ?? []).map((a) => a.job_id));
-  const allJobs = jobs.data ?? [];
-
-  // Unique filter options
-  const jobTypes = [...new Set(allJobs.map((j) => j.job_type))];
-  const locations = [...new Set(allJobs.map((j) => j.location))];
-
-  const list = useMemo(() => {
-    if (!me.data) return [];
-    return allJobs
-      .map((j) => ({ j, r: matchFor(me.data, j) }))
-      .filter(({ j, r }) => {
-        if (onlyEligible && !r.eligible) return false;
-        if (filterType && j.job_type !== filterType) return false;
-        if (filterLocation && j.location !== filterLocation) return false;
-        if (search) {
-          const q = search.toLowerCase();
-          return (
-            j.title.toLowerCase().includes(q) ||
-            (j.company?.name ?? "").toLowerCase().includes(q) ||
-            j.location.toLowerCase().includes(q) ||
-            j.skills.some((s) => s.name.toLowerCase().includes(q))
-          );
-        }
-        return true;
-      })
-      .sort((a, b) => b.r.score - a.r.score);
-  }, [allJobs, me.data, onlyEligible, filterType, filterLocation, search]);
-
-  if (me.isLoading || jobs.isLoading) return <Loading />;
-  if (!me.data) return <Empty>Couldn't load your profile.</Empty>;
-
-  const sel = open ? matchFor(me.data, open) : null;
-  const hasFilters = onlyEligible || filterType || filterLocation;
-  const eligibleCount = allJobs.filter((j) => matchFor(me.data, j).eligible).length;
+  if (profile.isLoading || opportunities.isLoading || applications.isLoading) return <Loading />;
+  const loadError = profile.error ?? opportunities.error ?? applications.error;
+  if (loadError) {
+    return (
+      <Empty>
+        Live opportunities could not be loaded:{" "}
+        {loadError instanceof Error ? loadError.message : "Unknown Supabase error"}
+      </Empty>
+    );
+  }
+  if (!profile.data) return <Empty>A student profile is not available for this account.</Empty>;
 
   return (
     <>
       <PageHeader
         title="Opportunities"
-        subtitle={`${allJobs.length} open roles · ${eligibleCount} you're eligible for`}
+        subtitle="Live opportunity listings. Matching and eligibility filters are unavailable because the current opportunities workflow is not connected to student skills or job requirements."
       />
-
-      {/* Search and filters */}
-      <div className="mb-5 space-y-3">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search roles, companies, skills…"
-              className="pl-9"
-            />
-          </div>
-          <Button
-            variant={hasFilters ? "default" : "outline"}
-            size="sm"
-            onClick={() => setShowFilters((v) => !v)}
-            className="shrink-0 gap-1.5"
-          >
-            <Filter className="h-3.5 w-3.5" />
-            Filters
-            {hasFilters && <span className="rounded-full bg-accent-foreground/20 px-1.5 py-0.5 text-[10px]">
-              {[onlyEligible, filterType, filterLocation].filter(Boolean).length}
-            </span>}
-          </Button>
+      <div className="mb-5 grid gap-3 rounded-lg border bg-card p-3 md:grid-cols-[1fr_180px_180px]">
+        <div className="relative">
+          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search role, company, location"
+            className="pl-9"
+          />
         </div>
-
-        {showFilters && (
-          <div className="flex flex-wrap items-center gap-3 rounded-lg border bg-card p-3">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={onlyEligible}
-                onChange={(e) => setOnlyEligible(e.target.checked)}
-                className="rounded"
-              />
-              Eligible only
-            </label>
-            <select
-              value={filterType}
-              onChange={(e) => setFilterType(e.target.value)}
-              className="h-8 rounded-md border bg-card px-2 text-sm"
-            >
-              <option value="">All types</option>
-              {jobTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-            </select>
-            <select
-              value={filterLocation}
-              onChange={(e) => setFilterLocation(e.target.value)}
-              className="h-8 rounded-md border bg-card px-2 text-sm"
-            >
-              <option value="">All locations</option>
-              {locations.map((l) => <option key={l} value={l}>{l}</option>)}
-            </select>
-            {hasFilters && (
-              <button
-                onClick={() => { setOnlyEligible(false); setFilterType(""); setFilterLocation(""); }}
-                className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <X className="h-3 w-3" /> Clear filters
-              </button>
-            )}
-          </div>
-        )}
-
-        {/* Active filter chips */}
-        {(search || hasFilters) && (
-          <div className="flex flex-wrap gap-1.5 text-xs">
-            {search && (
-              <span className="flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1">
-                Search: "{search}"
-                <button onClick={() => setSearch("")}><X className="h-3 w-3" /></button>
-              </span>
-            )}
-            {onlyEligible && (
-              <span className="flex items-center gap-1 rounded-full bg-accent/10 text-accent px-2.5 py-1">
-                Eligible only <button onClick={() => setOnlyEligible(false)}><X className="h-3 w-3" /></button>
-              </span>
-            )}
-            {filterType && (
-              <span className="flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1">
-                {filterType} <button onClick={() => setFilterType("")}><X className="h-3 w-3" /></button>
-              </span>
-            )}
-            {filterLocation && (
-              <span className="flex items-center gap-1 rounded-full bg-secondary px-2.5 py-1">
-                {filterLocation} <button onClick={() => setFilterLocation("")}><X className="h-3 w-3" /></button>
-              </span>
-            )}
-            <span className="text-muted-foreground self-center">{list.length} result{list.length !== 1 ? "s" : ""}</span>
-          </div>
-        )}
+        <select
+          value={jobType}
+          onChange={(event) => setJobType(event.target.value)}
+          className="h-10 rounded-md border bg-background px-3 text-sm"
+        >
+          <option value="all">All job types</option>
+          {jobTypes.map((type) => (
+            <option key={type} value={type}>
+              {type}
+            </option>
+          ))}
+        </select>
+        <select
+          value={location}
+          onChange={(event) => setLocation(event.target.value)}
+          className="h-10 rounded-md border bg-background px-3 text-sm"
+        >
+          <option value="all">All locations</option>
+          {locations.map((item) => (
+            <option key={item} value={item}>
+              {item}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Job cards */}
-      <div className="grid gap-3">
-        {list.length === 0 && (
-          <Empty>
-            <Briefcase className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-            <div className="font-medium">No roles match your current filters.</div>
-            <div className="mt-1 text-muted-foreground">Try removing some filters or add more skills to your profile.</div>
-          </Empty>
-        )}
-        {list.map(({ j, r }) => (
-          <button
-            key={j.id}
-            onClick={() => setOpen(j)}
-            className="flex flex-wrap items-start justify-between gap-4 rounded-lg border bg-card p-4 text-left transition-colors hover:border-accent/50 hover:shadow-sm"
-            aria-label={`Open details for ${j.title} at ${j.company?.name}`}
-          >
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-semibold">{j.title}</span>
-                <span className="rounded bg-secondary px-1.5 py-0.5 text-xs">{j.job_type}</span>
-                {applied.has(j.id) && (
-                  <span className="flex items-center gap-0.5 rounded bg-accent/15 px-1.5 py-0.5 text-xs text-accent">
-                    <Check className="h-3 w-3" /> Applied
-                  </span>
+      {filtered.length === 0 ? (
+        <Empty>
+          {rows.length
+            ? "No current opportunities match the filters."
+            : "No live opportunities found."}
+        </Empty>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {filtered.map((opportunity) => {
+            const applied = applicationIds.has(opportunity.id);
+            const requiredSkills =
+              opportunity.required_skills
+                ?.split(/[,\n;]/)
+                .map((skill) => skill.trim())
+                .filter(Boolean) ?? [];
+            return (
+              <article key={opportunity.id} className="rounded-xl border bg-card p-5">
+                <div className="flex items-start gap-3">
+                  <Briefcase className="mt-1 h-5 w-5 shrink-0 text-accent" />
+                  <div className="min-w-0 flex-1">
+                    <h2 className="font-semibold">{opportunity.title}</h2>
+                    <p className="text-sm text-muted-foreground">
+                      {opportunity.company?.name ?? "Company unavailable"} · {opportunity.job_type}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-3 flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  {opportunity.location}
+                </p>
+                <p className="mt-3 line-clamp-3 text-sm text-muted-foreground">
+                  {opportunity.description}
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Minimum CGPA: {opportunity.minimum_cgpa ?? "Not specified"}
+                </p>
+                {requiredSkills.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1">
+                    {requiredSkills.map((skill) => (
+                      <span key={skill} className="rounded bg-secondary px-2 py-1 text-xs">
+                        {skill}
+                      </span>
+                    ))}
+                  </div>
                 )}
-                {!r.eligible && (
-                  <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs text-destructive">Not eligible</span>
-                )}
-              </div>
-              <div className="mt-1 text-sm text-muted-foreground">
-                {j.company?.name} · {j.location} · ₹{j.ctc_lpa} LPA · Deadline {j.deadline ?? "—"}
-              </div>
-              <div className="mt-1 text-xs text-muted-foreground">
-                Min CGPA {j.min_cgpa} · Max backlogs {j.max_backlogs} · {j.eligible_branches.join(", ")}
-              </div>
-              <div className="mt-2 flex flex-wrap gap-1">
-                {j.skills.map((s) => (
-                  <span
-                    key={s.id}
-                    className={`rounded px-1.5 py-0.5 text-xs ${
-                      r.matched.some((m) => m.id === s.id)
-                        ? "bg-success/15 text-success"
-                        : "bg-muted text-muted-foreground"
-                    }`}
-                  >
-                    {s.name}
+                <div className="mt-4 flex items-center justify-between gap-3 border-t pt-3">
+                  <span className="text-xs text-muted-foreground">
+                    {opportunity.deadline
+                      ? `Deadline ${new Date(opportunity.deadline).toLocaleDateString()}`
+                      : "No deadline stored"}
                   </span>
-                ))}
-              </div>
-            </div>
-            <div className="shrink-0 text-right">
-              <div className={`font-display text-2xl font-bold ${r.eligible ? "text-accent" : "text-muted-foreground"}`}>
-                {r.score}%
-              </div>
-              <div className="text-xs text-muted-foreground">{r.eligible ? "match" : "not eligible"}</div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Job detail dialog */}
-      <Dialog open={!!open} onOpenChange={(o) => !o && setOpen(null)}>
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
-          {open && sel && (
-            <>
-              <DialogHeader>
-                <DialogTitle className="text-lg">{open.title}</DialogTitle>
-                <div className="text-sm text-muted-foreground">{open.company?.name} · {open.location}</div>
-              </DialogHeader>
-
-              <p className="text-sm text-muted-foreground">{open.description}</p>
-
-              {/* Job info grid */}
-              <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
-                <Info k="CTC" v={`₹${open.ctc_lpa} LPA`} />
-                <Info k="Type" v={open.job_type} />
-                <Info k="Location" v={open.location} />
-                <Info k="Min CGPA" v={String(open.min_cgpa)} />
-                <Info k="Max backlogs" v={String(open.max_backlogs)} />
-                <Info k="Deadline" v={open.deadline ?? "—"} />
-              </div>
-
-              <div className="text-sm">
-                <div className="font-medium mb-1">Eligible Branches</div>
-                <div className="flex flex-wrap gap-1">
-                  {open.eligible_branches.map((b) => (
-                    <span key={b} className="rounded bg-secondary px-2 py-0.5 text-xs">{b}</span>
-                  ))}
+                  <Button size="sm" disabled={applied} onClick={() => setSelected(opportunity)}>
+                    {applied ? "Applied" : "View and apply"}
+                  </Button>
                 </div>
+              </article>
+            );
+          })}
+        </div>
+      )}
+
+      <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{selected?.title}</DialogTitle>
+          </DialogHeader>
+          {selected && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {selected.company?.name ?? "Company unavailable"} · {selected.job_type} ·{" "}
+                {selected.location}
+              </p>
+              <p className="whitespace-pre-wrap text-sm">{selected.description}</p>
+              <div className="rounded-md border border-dashed p-3 text-xs text-muted-foreground">
+                Salary and branch eligibility are not represented by the current opportunities
+                table. Listed skills and minimum CGPA are employer-provided only, not verified
+                eligibility calculations.
               </div>
-
-              {/* Required skills */}
-              <div className="text-sm">
-                <div className="font-medium mb-1.5">Required Skills</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {open.skills.map((s) => (
-                    <span
-                      key={s.id}
-                      className={`flex items-center gap-1 rounded px-2 py-0.5 text-xs ${
-                        sel.matched.some((m) => m.id === s.id)
-                          ? "bg-success/15 text-success"
-                          : "bg-destructive/10 text-destructive"
-                      }`}
-                    >
-                      {sel.matched.some((m) => m.id === s.id)
-                        ? <Check className="h-3 w-3" />
-                        : <X className="h-3 w-3" />
-                      }
-                      {s.name}
-                    </span>
-                  ))}
-                </div>
-              </div>
-
-              {/* Match reasons / blockers */}
-              <div className="rounded-md bg-secondary/50 p-3 text-sm">
-                <div className="font-semibold mb-2">Your match — {sel.score}%</div>
-                <ul className="space-y-1">
-                  {sel.reasons.map((x) => (
-                    <li key={x} className="flex items-start gap-2 text-success">
-                      <Check className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {x}
-                    </li>
-                  ))}
-                  {sel.blockers.map((x) => (
-                    <li key={x} className="flex items-start gap-2 text-destructive">
-                      <X className="mt-0.5 h-3.5 w-3.5 shrink-0" /> {x}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {sel.missing.length > 0 && (
-                <div className="text-sm">
-                  <div className="font-semibold mb-1">Skill gaps to close</div>
-                  <p className="text-muted-foreground">
-                    Add{" "}
-                    <strong>{sel.missing.map((m) => m.name).join(", ")}</strong>
-                    {" "}to your profile to reach 100% skill coverage.
-                  </p>
-                </div>
-              )}
-
-              {/* Apply / status */}
-              <div className="flex items-center gap-3 pt-2 border-t">
-                <Button
-                  className="flex-1"
-                  disabled={!sel.eligible || applied.has(open.id) || apply.isPending}
-                  onClick={() => apply.mutate({ job: open, score: sel.score })}
-                >
-                  {apply.isPending
-                    ? "Submitting…"
-                    : applied.has(open.id)
-                    ? "✓ Application Submitted"
-                    : !sel.eligible
-                    ? "Not Eligible"
-                    : "Apply Now"}
+              <div className="flex justify-end gap-2">
+                <Button variant="outline" onClick={() => setSelected(null)}>
+                  Close
                 </Button>
-                <Button variant="outline" onClick={() => setOpen(null)}>Close</Button>
+                <Button onClick={() => apply.mutate(selected)} disabled={apply.isPending}>
+                  {apply.isPending ? "Submitting..." : "Submit application"}
+                </Button>
               </div>
-            </>
+            </div>
           )}
         </DialogContent>
       </Dialog>
     </>
-  );
-}
-
-function Info({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="rounded-md bg-secondary p-2">
-      <div className="text-xs text-muted-foreground">{k}</div>
-      <div className="font-medium">{v}</div>
-    </div>
   );
 }
