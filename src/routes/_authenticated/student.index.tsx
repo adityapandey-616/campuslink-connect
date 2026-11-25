@@ -272,14 +272,24 @@ function LiveStudentDashboard() {
         )}
       </section>
 
-      <section className="rounded-xl border border-dashed bg-muted/20 p-4 text-sm text-muted-foreground">
-        <div className="mb-1 flex items-center gap-2 font-medium text-foreground">
-          <GraduationCap className="h-4 w-4" />
-          Placement drives are unavailable
+      <section className="rounded-xl border bg-card p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="flex items-center gap-2 font-medium">
+              <GraduationCap className="h-4 w-4 text-accent" />
+              Placement drives
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              View live drive schedules, registration deadlines, and published requirements.
+            </p>
+          </div>
+          <Link to="/student/drives">
+            <Button variant="outline">
+              <CalendarCheck className="mr-2 h-4 w-4" />
+              View drives
+            </Button>
+          </Link>
         </div>
-        The live Supabase project has no verified placement-drive table. Skill matching, readiness,
-        and academic eligibility are also unavailable because their student and opportunity fields
-        are not present in the deployed schema.
       </section>
     </div>
   );
