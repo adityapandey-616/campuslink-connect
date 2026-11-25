@@ -156,9 +156,8 @@ function AdminDashboard() {
           <GraduationCap className="h-4 w-4" />
           Schema limitations
         </div>
-        The connected schema has no placement-drives table. Placement and eligibility analytics are
-        not joined into these queries; private document access and salary units require manual
-        verification.
+        Placement drives are managed on the Placement Drives page and are not joined into these
+        dashboard analytics. Private document access and salary units require manual verification.
       </section>
     </div>
   );

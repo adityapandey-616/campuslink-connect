@@ -68,7 +68,7 @@ const features = [
   {
     icon: CalendarClock,
     title: "Drives & interview scheduling",
-    body: "Drive scheduling and registration depend on the deployed drive schema and its access policies.",
+    body: "Admins can manage live placement-drive schedules. Student registration requires a separate registration table and access policies.",
   },
   {
     icon: FileCheck2,

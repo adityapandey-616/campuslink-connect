@@ -436,6 +436,56 @@ export type Database = {
           },
         ];
       };
+      placement_drives: {
+        Row: {
+          company_id: string;
+          created_at: string;
+          description: string | null;
+          drive_date: string;
+          eligible_branches: string | null;
+          id: string;
+          location: string;
+          minimum_cgpa: number | null;
+          registration_deadline: string;
+          status: "upcoming" | "ongoing" | "completed" | "cancelled";
+          title: string;
+        };
+        Insert: {
+          company_id: string;
+          created_at?: string;
+          description?: string | null;
+          drive_date: string;
+          eligible_branches?: string | null;
+          id?: string;
+          location: string;
+          minimum_cgpa?: number | null;
+          registration_deadline: string;
+          status?: "upcoming" | "ongoing" | "completed" | "cancelled";
+          title: string;
+        };
+        Update: {
+          company_id?: string;
+          created_at?: string;
+          description?: string | null;
+          drive_date?: string;
+          eligible_branches?: string | null;
+          id?: string;
+          location?: string;
+          minimum_cgpa?: number | null;
+          registration_deadline?: string;
+          status?: "upcoming" | "ongoing" | "completed" | "cancelled";
+          title?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "placement_drives_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       profiles: {
         Row: {
           branch: string | null;
