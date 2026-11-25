@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  adminDriveRegistrationsQuery,
   adminPlacementDrivesQuery,
   type PlacementDrive,
   type PlacementDriveStatus,
@@ -37,6 +38,7 @@ function formatDriveDate(value: string) {
 function AdminDrivesPage() {
   const queryClient = useQueryClient();
   const drivesQuery = useQuery(adminPlacementDrivesQuery);
+  const registrationsQuery = useQuery(adminDriveRegistrationsQuery);
   const companiesQuery = useQuery(adminCompaniesQuery);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingDrive, setEditingDrive] = useState<PlacementDrive | null>(null);
@@ -173,6 +175,9 @@ function AdminDrivesPage() {
         <div className="grid gap-4 md:grid-cols-2">
           {drives.map((drive) => {
             const company = companies.find((item) => item.id === drive.company_id);
+            const registrations = (registrationsQuery.data ?? []).filter(
+              (registration) => registration.drive_id === drive.id,
+            );
             return (
               <article key={drive.id} className="rounded-xl border bg-card p-5">
                 <div className="flex items-start justify-between gap-3">
@@ -208,6 +213,52 @@ function AdminDrivesPage() {
                     {drive.eligible_branches || "Branches not specified"}
                   </span>
                 </div>
+                <details className="mt-4 border-t pt-3">
+                  <summary className="cursor-pointer text-sm font-medium">
+                    Registrations{" "}
+                    <span className="text-muted-foreground">
+                      ({registrationsQuery.data ? registrations.length : "—"})
+                    </span>
+                  </summary>
+                  {registrationsQuery.isLoading ? (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Loading registered students...
+                    </p>
+                  ) : registrationsQuery.error ? (
+                    <p className="mt-2 text-sm text-destructive">
+                      Registered student details could not be loaded.
+                    </p>
+                  ) : registrations.length === 0 ? (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      No students have registered yet.
+                    </p>
+                  ) : (
+                    <ul className="mt-2 space-y-2">
+                      {registrations.map((registration) => (
+                        <li key={registration.id} className="rounded-md bg-muted/40 p-2 text-sm">
+                          <p className="font-medium">
+                            {registration.student?.full_name ||
+                              registration.student?.email ||
+                              "Student profile unavailable"}
+                          </p>
+                          {registration.student?.email && registration.student.full_name && (
+                            <p className="text-xs text-muted-foreground">
+                              {registration.student.email}
+                            </p>
+                          )}
+                          {registration.student?.branch && (
+                            <p className="text-xs text-muted-foreground">
+                              Branch: {registration.student.branch}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Registered {new Date(registration.registered_at).toLocaleString()}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </details>
                 <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t pt-3">
                   <select
                     aria-label={`Update ${drive.title} status`}

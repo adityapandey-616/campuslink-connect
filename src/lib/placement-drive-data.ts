@@ -20,6 +20,63 @@ export const adminPlacementDrivesQuery = queryOptions({
   },
 });
 
+export interface MyDriveRegistration {
+  id: string;
+  drive_id: string;
+  registered_at: string;
+}
+
+export const myDriveRegistrationsQuery = (profileId: string) =>
+  queryOptions({
+    queryKey: ["my-drive-registrations", profileId],
+    queryFn: async (): Promise<MyDriveRegistration[]> => {
+      const { data, error } = await supabase
+        .from("drive_registrations")
+        .select("id,drive_id,registered_at")
+        .eq("profile_id", profileId);
+      if (error) throw new Error(`Could not load your drive registrations: ${error.message}`);
+      return data ?? [];
+    },
+  });
+
+export interface AdminDriveRegistration extends MyDriveRegistration {
+  profile_id: string;
+  student: {
+    full_name: string | null;
+    email: string | null;
+    branch: string | null;
+  } | null;
+}
+
+export const adminDriveRegistrationsQuery = queryOptions({
+  queryKey: ["admin-drive-registrations"],
+  queryFn: async (): Promise<AdminDriveRegistration[]> => {
+    const { data, error } = await supabase
+      .from("drive_registrations")
+      .select("id,drive_id,profile_id,registered_at")
+      .order("registered_at", { ascending: false });
+    if (error) throw new Error(`Could not load drive registrations: ${error.message}`);
+
+    const registrations = data ?? [];
+    if (!registrations.length) return [];
+
+    const profileIds = [...new Set(registrations.map((registration) => registration.profile_id))];
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("id,full_name,email,branch")
+      .in("id", profileIds);
+    if (profilesError) {
+      throw new Error(`Could not load registered student details: ${profilesError.message}`);
+    }
+
+    const profilesById = new Map((profiles ?? []).map((profile) => [profile.id, profile]));
+    return registrations.map((registration) => ({
+      ...registration,
+      student: profilesById.get(registration.profile_id) ?? null,
+    }));
+  },
+});
+
 export interface LiveStudentPlacementDrive extends PlacementDrive {
   company: { id: string; name: string } | null;
 }
@@ -32,13 +89,10 @@ export const liveStudentPlacementDrivesQuery = queryOptions({
       throw new Error("Please sign in to view placement drives.");
     }
 
-    const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await supabase
       .from("placement_drives")
       .select(DRIVE_FIELDS)
-      .eq("status", "upcoming")
-      .gte("drive_date", today)
-      .order("drive_date", { ascending: true });
+      .order("drive_date", { ascending: false });
     if (error) throw new Error(`Could not load placement drives: ${error.message}`);
 
     const drives = data ?? [];

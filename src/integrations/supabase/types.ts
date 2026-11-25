@@ -189,6 +189,27 @@ export type Database = {
           },
         ];
       };
+      drive_registrations: {
+        Row: {
+          drive_id: string;
+          id: string;
+          profile_id: string;
+          registered_at: string;
+        };
+        Insert: {
+          drive_id: string;
+          id?: string;
+          profile_id: string;
+          registered_at?: string;
+        };
+        Update: {
+          drive_id?: string;
+          id?: string;
+          profile_id?: string;
+          registered_at?: string;
+        };
+        Relationships: [];
+      };
       interviews: {
         Row: {
           application_id: string | null;
