@@ -291,7 +291,7 @@ function RecruiterApplications() {
                       Mark joined
                     </Button>
                   )}
-                {application.status !== "rejected" && (
+                {["applied", "shortlisted", "interview"].includes(application.status) && (
                   <Button
                     size="sm"
                     variant="outline"
