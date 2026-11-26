@@ -64,6 +64,7 @@ export interface AdminOffer {
   id: string;
   application_id: string | null;
   salary: number | null;
+  salary_unit: string | null;
   status: string;
   joining_date: string | null;
   created_at: string;
@@ -246,6 +247,7 @@ async function loadAdminOffers() {
         id: string;
         application_id: string | null;
         salary: number | null;
+        salary_unit: string | null;
         status: string;
         joining_date: string | null;
         created_at: string;
@@ -254,13 +256,14 @@ async function loadAdminOffers() {
     }> => {
       const { data, error } = await supabase
         .from("offers")
-        .select("id,application_id,salary,status,joining_date,created_at")
+        .select("id,application_id,salary,salary_unit,status,joining_date,created_at")
         .order("created_at", { ascending: false })
         .range(from, to);
       return {
         data:
           data?.map((offer) => ({
             ...offer,
+            salary_unit: offer.salary_unit ?? null,
             status: offer.status ?? "unknown",
           })) ?? null,
         error,

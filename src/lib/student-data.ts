@@ -27,6 +27,7 @@ export interface StudentApplication {
     id: string;
     application_id: string;
     salary: number | null;
+    salary_unit: string | null;
     status: string;
     joining_date: string | null;
     created_at: string;
@@ -147,7 +148,7 @@ export const myApplicationsQuery = queryOptions({
         .in("application_id", applicationIds),
       supabase
         .from("offers")
-        .select("id,application_id,salary,status,joining_date,created_at")
+        .select("id,application_id,salary,salary_unit,status,joining_date,created_at")
         .in("application_id", applicationIds),
     ]);
 
@@ -211,6 +212,7 @@ export const myApplicationsQuery = queryOptions({
       current.push({
         ...offer,
         application_id: offer.application_id,
+        salary_unit: offer.salary_unit ?? null,
         status: offer.status ?? "pending",
       });
       offersByApplication.set(offer.application_id, current);

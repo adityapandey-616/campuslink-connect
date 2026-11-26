@@ -1,19 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
-import {
-  Briefcase,
-  CheckCircle2,
-  Filter,
-  Search,
-  SlidersHorizontal,
-  UserRound,
-} from "lucide-react";
+import { useMemo, useState, type FormEvent } from "react";
+import { Briefcase, CheckCircle2, CircleDollarSign, Filter, Search, UserRound } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Empty, Loading, PageHeader } from "@/components/AppShell";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { companyJobsQuery, myCompanyQuery } from "@/lib/recruiter-data";
 import { RECRUITER_STATUS_STYLES, formatStatus, getStatusLabel } from "@/lib/recruiter-frontend";
 
@@ -32,6 +27,14 @@ const STATUS_OPTIONS = [
 ] as const;
 type StatusFilter = (typeof STATUS_OPTIONS)[number];
 
+/** Format a salary number as Indian locale with unit label */
+function formatSalary(salary: number | null, unit: string | null): string {
+  if (salary === null) return "Salary TBD";
+  const formatted = salary.toLocaleString("en-IN");
+  if (unit === "INR_PER_MONTH") return `₹${formatted}/month`;
+  return `₹${formatted}/year`;
+}
+
 function RecruiterApplications() {
   const company = useQuery(myCompanyQuery);
   const jobs = useQuery(companyJobsQuery(company.data?.id));
@@ -39,6 +42,12 @@ function RecruiterApplications() {
   const [status, setStatus] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState<"candidate" | "status">("candidate");
+  const [offerTarget, setOfferTarget] = useState<{
+    applicationId: string;
+    candidateName: string;
+    jobTitle: string;
+    jobType: string;
+  } | null>(null);
 
   const applications = useMemo(() => {
     const list =
@@ -85,6 +94,42 @@ function RecruiterApplications() {
     },
     onError: (error) =>
       toast.error(error instanceof Error ? error.message : "Unable to update the application."),
+  });
+
+  const createOffer = useMutation({
+    mutationFn: async ({
+      applicationId,
+      salary,
+      salaryUnit,
+      joiningDate,
+    }: {
+      applicationId: string;
+      salary: number;
+      salaryUnit: "INR_PER_YEAR" | "INR_PER_MONTH";
+      joiningDate: string;
+    }) => {
+      const { error: offerError } = await supabase.from("offers").insert({
+        application_id: applicationId,
+        salary,
+        salary_unit: salaryUnit,
+        joining_date: joiningDate,
+        status: "pending",
+      });
+      if (offerError) {
+        if (offerError.code === "23505") {
+          throw new Error("An offer already exists for this application.");
+        }
+        throw new Error(`Could not create offer: ${offerError.message}`);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Offer created — application moved to Offered.");
+      setOfferTarget(null);
+      qc.invalidateQueries({ queryKey: ["company-jobs"] });
+      qc.invalidateQueries({ queryKey: ["my-applications"] });
+    },
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not create offer."),
   });
 
   if (company.isLoading || jobs.isLoading) return <Loading />;
@@ -183,7 +228,7 @@ function RecruiterApplications() {
                   </div>
                   <div className="mt-1 text-sm text-muted-foreground">
                     {application.job.title} · {application.job.location} · Applied{" "}
-                    {new Date(application.applied_at).toLocaleDateString()} · Match unavailable
+                    {new Date(application.applied_at).toLocaleDateString()}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
@@ -220,9 +265,20 @@ function RecruiterApplications() {
                   </span>
                 )}
                 {application.status === "interview" && (
-                  <span className="text-xs text-muted-foreground">
-                    Offer creation requires a confirmed salary unit and write policy.
-                  </span>
+                  <Button
+                    size="sm"
+                    onClick={() =>
+                      setOfferTarget({
+                        applicationId: application.id,
+                        candidateName: application.student.full_name,
+                        jobTitle: application.job.title,
+                        jobType: application.job.job_type,
+                      })
+                    }
+                  >
+                    <CircleDollarSign className="mr-1 h-3 w-3" />
+                    Create Offer
+                  </Button>
                 )}
                 {application.status === "offered" &&
                   application.offers.some((offer) => offer.status === "accepted") && (
@@ -262,9 +318,15 @@ function RecruiterApplications() {
                 (() => {
                   const offer = application.offers[0];
                   return offer ? (
-                    <div className="mt-3 flex items-center gap-2 text-sm text-muted-foreground">
+                    <div className="mt-3 flex items-center gap-2 text-sm">
                       <CheckCircle2 className="h-4 w-4 text-success" />
-                      Salary {offer.salary} · {offer.status}
+                      <span className="font-semibold text-success">
+                        {formatSalary(offer.salary, offer.salary_unit)}
+                      </span>
+                      <span className="text-muted-foreground">
+                        · Joining: {offer.joining_date ?? "TBD"} · Status:{" "}
+                        <span className="capitalize font-medium">{offer.status}</span>
+                      </span>
                     </div>
                   ) : null;
                 })()}
@@ -272,6 +334,116 @@ function RecruiterApplications() {
           ))}
         </div>
       )}
+
+      {/* Create Offer Dialog */}
+      <Dialog
+        open={!!offerTarget}
+        onOpenChange={(open) => {
+          if (!open) setOfferTarget(null);
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CircleDollarSign className="h-5 w-5 text-primary" />
+              Create Offer — {offerTarget?.candidateName}
+            </DialogTitle>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event: FormEvent<HTMLFormElement>) => {
+              event.preventDefault();
+              if (!offerTarget) return;
+              const fd = new FormData(event.currentTarget);
+              const salary = Number(fd.get("salary"));
+              const salaryUnit = String(fd.get("salary_unit")) as "INR_PER_YEAR" | "INR_PER_MONTH";
+              const joiningDate = String(fd.get("joining_date"));
+              if (!salary || salary <= 0) {
+                toast.error("Enter a positive salary amount.");
+                return;
+              }
+              if (!joiningDate) {
+                toast.error("Enter a joining date.");
+                return;
+              }
+              if (new Date(joiningDate) <= new Date()) {
+                toast.error("Joining date must be in the future.");
+                return;
+              }
+              createOffer.mutate({
+                applicationId: offerTarget.applicationId,
+                salary,
+                salaryUnit,
+                joiningDate,
+              });
+            }}
+          >
+            <div className="rounded-md bg-muted/50 p-3 text-sm">
+              <span className="text-muted-foreground">Role: </span>
+              <strong>{offerTarget?.jobTitle}</strong>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="offer-salary">Salary amount</Label>
+              <Input
+                id="offer-salary"
+                name="salary"
+                type="number"
+                min={1}
+                step={1}
+                required
+                placeholder={
+                  offerTarget?.jobType?.toLowerCase().includes("intern")
+                    ? "e.g. 25000 (monthly stipend)"
+                    : "e.g. 1200000 (annual CTC)"
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="offer-unit">Salary unit</Label>
+              <select
+                id="offer-unit"
+                name="salary_unit"
+                className="w-full h-10 rounded-md border bg-background px-3 text-sm"
+                defaultValue={
+                  offerTarget?.jobType?.toLowerCase().includes("intern")
+                    ? "INR_PER_MONTH"
+                    : "INR_PER_YEAR"
+                }
+              >
+                <option value="INR_PER_YEAR">INR per year (Annual CTC)</option>
+                <option value="INR_PER_MONTH">INR per month (Monthly stipend)</option>
+              </select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="offer-joining">Joining date</Label>
+              <Input
+                id="offer-joining"
+                name="joining_date"
+                type="date"
+                required
+                min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)}
+              />
+            </div>
+
+            <div className="flex justify-end gap-2 pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setOfferTarget(null)}
+                disabled={createOffer.isPending}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={createOffer.isPending}>
+                {createOffer.isPending ? "Creating…" : "Create Offer"}
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

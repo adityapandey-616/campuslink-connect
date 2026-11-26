@@ -73,7 +73,11 @@ function AdminOffersAndDocumentsPage() {
                       <div>{offer.company_name}</div>
                       <div className="text-xs text-muted-foreground">{offer.opportunity_title}</div>
                     </td>
-                    <td className="p-3">{offer.salary} (unit not verified)</td>
+                    <td className="p-3">
+                      {offer.salary !== null
+                        ? `₹${offer.salary.toLocaleString("en-IN")}${offer.salary_unit === "INR_PER_MONTH" ? " / month" : " / year"}`
+                        : "TBD"}
+                    </td>
                     <td className="p-3">
                       {offer.joining_date
                         ? new Date(offer.joining_date).toLocaleDateString()

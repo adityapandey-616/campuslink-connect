@@ -298,7 +298,9 @@ function Applications() {
                             <div className="flex items-center gap-2">
                               <CheckCircle2 className="h-4 w-4 text-success" />
                               <span className="font-semibold text-success">
-                                {offer.salary} (salary unit not verified)
+                                {offer.salary !== null
+                                  ? `₹${offer.salary.toLocaleString("en-IN")}${offer.salary_unit === "INR_PER_MONTH" ? " / month" : " / year"}`
+                                  : "Salary TBD"}
                               </span>
                             </div>
                             <div className="mt-1 text-sm text-muted-foreground">

@@ -26,6 +26,7 @@ export interface RecruiterApplicant {
   offers: Array<{
     id: string;
     salary: number | null;
+    salary_unit: string | null;
     status: string;
     joining_date?: string | null;
   }>;
@@ -147,7 +148,7 @@ export const companyJobsQuery = (companyId: string | undefined) =>
         applicationIds.length
           ? supabase
               .from("offers")
-              .select("id,application_id,salary,status,joining_date")
+              .select("id,application_id,salary,salary_unit,status,joining_date")
               .in("application_id", applicationIds)
           : Promise.resolve({ data: [], error: null }),
       ]);
@@ -184,6 +185,7 @@ export const companyJobsQuery = (companyId: string | undefined) =>
         items.push({
           id: offer.id,
           salary: offer.salary,
+          salary_unit: offer.salary_unit ?? null,
           status: offer.status ?? "pending",
           joining_date: offer.joining_date,
         });
